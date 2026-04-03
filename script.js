@@ -276,6 +276,36 @@
     syncAll();
   }
 
+
+
+  function bindResponsiveStage() {
+    var stage = document.getElementById('page-stage');
+    var wrapper = document.getElementById('page-stage-wrapper');
+    if (!stage || !wrapper) return;
+
+    var rootStyle = getComputedStyle(document.documentElement);
+    var baseWidth = parseFloat(rootStyle.getPropertyValue('--re-stage-width')) || 1380;
+    var baseHeight = parseFloat(rootStyle.getPropertyValue('--re-stage-height')) || 1008;
+
+    function updateStageScale() {
+      var viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+      var gutter = viewportWidth <= 768 ? 12 : 24;
+      var availableWidth = Math.max(320, viewportWidth - gutter);
+      var scale = Math.min(1, availableWidth / baseWidth);
+      var scaledWidth = Math.round(baseWidth * scale);
+      var scaledHeight = Math.round(baseHeight * scale);
+
+      wrapper.style.width = scaledWidth + 'px';
+      wrapper.style.height = scaledHeight + 'px';
+      stage.style.transform = 'scale(' + scale + ')';
+      document.body.style.minHeight = scaledHeight + 'px';
+    }
+
+    updateStageScale();
+    window.addEventListener('resize', updateStageScale, { passive: true });
+    window.addEventListener('orientationchange', updateStageScale, { passive: true });
+  }
+
   function bindThemeToggles() {
     var root = document.documentElement;
     var body = document.body;
@@ -463,7 +493,7 @@
       if (!img) return;
       var items = [];
       try { items = JSON.parse(widget.getAttribute('data-image-loop-images') || '[]'); } catch (_error) {}
-      items = Array.isArray(items) ? items.filter(Boolean).slice(0, 5) : [];
+      items = Array.isArray(items) ? items.filter(Boolean) : [];
       if (!items.length) return;
       var index = 0;
       img.src = items[0];
@@ -546,6 +576,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     bindPlayers();
+    bindResponsiveStage();
     bindThemeToggles();
     bindNewsWidgets();
     bindWeatherWidgets();
