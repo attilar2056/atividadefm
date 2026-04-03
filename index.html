@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site em construção</title>
+  <meta name="description" content="Página temporária de site em construção" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .badge {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    p {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      margin-bottom: 14px;
+    }
+
+    .highlight {
+      color: #93c5fd;
+      font-weight: bold;
+    }
+
+    .loader {
+      width: 70px;
+      height: 70px;
+      border: 6px solid rgba(255, 255, 255, 0.18);
+      border-top-color: #60a5fa;
+      border-radius: 50%;
+      margin: 30px auto 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 30px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="badge">Página temporária</div>
+    <h1>Site em construção</h1>
+    <p>
+      Estamos preparando algo novo para você.
+    </p>
+    <p>
+      Em breve este espaço estará disponível com o conteúdo oficial.
+    </p>
+
+    <div class="loader"></div>
+
+    <p class="footer">
+      Volte em breve.
+    </p>
+  </main>
+</body>
+</html>
