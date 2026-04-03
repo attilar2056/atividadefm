@@ -1,21 +1,36 @@
 * { box-sizing:border-box; }
-:root { --re-page-bg: #ffffff; --re-page-text: #111111; --re-page-bg-dark: #0f172a; --re-page-text-dark: #f8fafc; }
-html, body { margin:0; min-height:100%; }
+:root { --re-page-bg: #ffffff; --re-page-text: #111111; --re-page-bg-dark: #0f172a; --re-page-text-dark: #f8fafc; --re-stage-width: 1380; --re-stage-height: 1008; }
+html, body { margin:0; min-height:100%; width:100%; }
 body {
   font-family: Arial, sans-serif;
   background: var(--re-page-bg);
   color: var(--re-page-text);
   transition: background .2s ease, color .2s ease;
+  overflow-x: hidden;
 }
 html.re-dark-theme, body.re-dark-theme { --re-page-bg: var(--re-page-bg-dark); --re-page-text: var(--re-page-text-dark); }
+#page-stage-wrapper {
+  position: relative;
+  width: calc(var(--re-stage-width) * 1px);
+  height: calc(var(--re-stage-height) * 1px);
+  margin: 0 auto;
+  overflow: hidden;
+}
 #page-stage {
   position: relative;
-  width: 1380px;
-  height: 1008px;
+  width: calc(var(--re-stage-width) * 1px);
+  height: calc(var(--re-stage-height) * 1px);
   margin: 0 auto;
   overflow: visible;
   background: var(--re-page-bg);
   transition: background .2s ease, color .2s ease;
+  transform-origin: top left;
+}
+
+@media (max-width: 1380px) {
+  body {
+    padding: 0;
+  }
 }
 .re-element { position:absolute; }
 .re-image-inner, .re-vinyl-image, .re-current-program-photo, .re-image-loop-img { width:100%; height:100%; display:block; }
@@ -148,3 +163,67 @@ html.re-dark-theme .re-theme-icon-moon, body.re-dark-theme .re-theme-icon-moon, 
 .re-schedule-title { font-weight:700; font-size:1.1em; }
 .re-schedule-host { opacity:0.88; }
 .re-schedule-time { opacity:0.8; font-size:0.92em; }
+
+@media (max-width: 768px) and (orientation: portrait) {
+  :root {
+    --re-stage-width: 420;
+    --re-stage-height: 1460;
+  }
+
+  body {
+    padding: 0 0 18px;
+  }
+
+  #page-stage-wrapper {
+    overflow: visible;
+  }
+
+  #page-stage .re-element[data-id="el_vmiu5d4m"] { left: 12px !important; top: 12px !important; width: 396px !important; height: 74px !important; }
+  #page-stage .re-element[data-id="el_5umb2xbh"] { left: 24px !important; top: 22px !important; width: 48px !important; height: 48px !important; }
+  #page-stage .re-element[data-id="el_76a7i630"] { left: 82px !important; top: 20px !important; width: 182px !important; height: 54px !important; }
+  #page-stage .re-element[data-id="el_cf6i7i2c"] { left: 326px !important; top: 31px !important; width: 70px !important; height: 30px !important; }
+  #page-stage .re-element[data-id="el_gsde6k4a"] { left: 286px !important; top: 96px !important; width: 108px !important; height: 108px !important; }
+
+  #page-stage .re-element[data-id="el_3lzqpbmu"] { left: 12px !important; top: 102px !important; width: 396px !important; height: 248px !important; }
+  #page-stage .re-element[data-id="el_0ljn6bwv"] { left: 86px !important; top: 122px !important; width: 248px !important; height: 244px !important; }
+  #page-stage .re-element[data-id="el_fp3e6edh"] { left: 86px !important; top: 118px !important; width: 248px !important; height: 248px !important; }
+  #page-stage .re-element[data-id="el_i1fsamo6"] { left: 26px !important; top: 316px !important; width: 26px !important; height: 26px !important; }
+  #page-stage .re-element[data-id="el_g7yn3dz4"] { left: 62px !important; top: 332px !important; width: 18px !important; height: 18px !important; }
+  #page-stage .re-element[data-id="el_dg2oogzt"] { left: 358px !important; top: 146px !important; width: 18px !important; height: 136px !important; }
+  #page-stage .re-element[data-id="el_boop6oq8"] { left: 366px !important; top: 156px !important; width: 18px !important; height: 118px !important; }
+  #page-stage .re-element[data-id="el_rh670qec"] { left: 370px !important; top: 232px !important; width: 18px !important; height: 18px !important; }
+
+  #page-stage .re-element[data-id="el_x0n04dkd"] { left: 12px !important; top: 370px !important; width: 396px !important; height: 112px !important; }
+  #page-stage .re-element[data-id="el_sppb0lzv"] { left: 12px !important; top: 500px !important; width: 184px !important; height: 138px !important; }
+  #page-stage .re-element[data-id="el_h1uuqpvi"] { left: 208px !important; top: 500px !important; width: 200px !important; height: 300px !important; }
+  #page-stage .re-element[data-id="el_zdmrrlet"] { left: 12px !important; top: 654px !important; width: 396px !important; height: 220px !important; }
+
+  #page-stage .re-element[data-id="el_dicit7l5"] { left: 12px !important; top: 890px !important; width: 396px !important; height: 88px !important; }
+  #page-stage .re-element[data-id="el_jp80pqok"] { left: 28px !important; top: 902px !important; width: 56px !important; height: 56px !important; }
+  #page-stage .re-element[data-id="el_cleq1qs5"] { left: 102px !important; top: 919px !important; width: 150px !important; height: 24px !important; font-size: 18px !important; }
+  #page-stage .re-element[data-id="el_7ix6s29h"] { left: 264px !important; top: 914px !important; width: 122px !important; height: 36px !important; }
+  #page-stage .re-element[data-id="el_6tklizjp"] { left: 282px !important; top: 921px !important; width: 92px !important; height: 22px !important; font-size: 16px !important; }
+
+  #page-stage .re-element[data-id="el_rm1spt2x"] { left: 12px !important; top: 996px !important; width: 396px !important; height: 112px !important; }
+  #page-stage .re-element[data-id="el_239xlkuf"] { left: 12px !important; top: 1124px !important; width: 396px !important; height: 176px !important; }
+  #page-stage .re-element[data-id="el_hqtllbjx"] { left: 254px !important; top: 812px !important; width: 124px !important; height: 34px !important; }
+
+  #page-stage .re-element[data-id="el_hr5qziym"] { left: 12px !important; top: 1322px !important; width: 396px !important; height: 42px !important; }
+  #page-stage .re-element[data-id="el_9qx06f38"] { left: 12px !important; top: 1372px !important; width: 396px !important; height: 24px !important; }
+  #page-stage .re-element[data-id="el_x5tnf1bu"] { left: 20px !important; top: 1332px !important; width: 216px !important; height: 22px !important; font-size: 16px !important; }
+  #page-stage .re-element[data-id="el_g216clnl"] { left: 300px !important; top: 1310px !important; width: 52px !important; height: 52px !important; }
+  #page-stage .re-element[data-id="el_l66glu56"] { left: 360px !important; top: 1318px !important; width: 36px !important; height: 36px !important; }
+  #page-stage .re-element[data-id="el_xvgktg90"] { left: 18px !important; top: 1378px !important; width: 310px !important; height: 34px !important; font-size: 11px !important; line-height: 1.25 !important; }
+
+  #page-stage .re-news-item a {
+    font-size: 13px;
+  }
+
+  #page-stage .re-weather-city {
+    font-size: 20px !important;
+  }
+
+  #page-stage .re-weather-temp {
+    font-size: 48px !important;
+  }
+}
