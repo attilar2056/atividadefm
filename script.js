@@ -302,35 +302,48 @@
     var scheduled = false;
     function updateStageScale() {
       scheduled = false;
-      var rootStyle = getComputedStyle(document.documentElement);
-      var baseWidth = parseFloat(rootStyle.getPropertyValue('--re-stage-width')) || 1380;
-      var baseHeight = parseFloat(rootStyle.getPropertyValue('--re-stage-height')) || 1008;
       var viewport = getViewportBox();
       var touch = isTouchDevice();
       var portrait = viewport.height >= viewport.width;
+      var touchPortrait = touch && portrait;
+      var touchLandscape = touch && !portrait;
+      var baseWidth = touchPortrait ? 390 : 1380;
+      var baseHeight = touchPortrait ? 1730 : 1008;
+      var root = document.documentElement;
+      root.style.setProperty('--re-stage-width', String(baseWidth));
+      root.style.setProperty('--re-stage-height', String(baseHeight));
+      stage.style.width = baseWidth + 'px';
+      stage.style.height = baseHeight + 'px';
+
       var narrowScreen = viewport.width <= 900;
-      var shouldUseLandscapeFit = touch && !portrait;
-      var gutter = shouldUseLandscapeFit ? 0 : (narrowScreen ? 0 : 24);
-      var availableWidth = Math.max(1, viewport.width - gutter);
-      var availableHeight = Math.max(1, viewport.height - (touch ? 0 : 12));
+      var gutterX = touch ? 0 : (narrowScreen ? 0 : 24);
+      var gutterY = touchPortrait ? 0 : (touchLandscape ? 0 : 12);
+      var availableWidth = Math.max(1, viewport.width - gutterX);
+      var availableHeight = Math.max(1, viewport.height - gutterY);
       var widthScale = availableWidth / baseWidth;
       var heightScale = availableHeight / baseHeight;
-      var scale = shouldUseLandscapeFit ? Math.min(1, widthScale, heightScale) : Math.min(1, widthScale);
+      var scale = touchLandscape ? Math.min(1, widthScale, heightScale) : Math.min(1, widthScale);
       var scaledWidth = Math.max(1, Math.round(baseWidth * scale));
       var scaledHeight = Math.max(1, Math.round(baseHeight * scale));
 
       document.body.classList.toggle('re-touch-device', touch);
-      document.body.classList.toggle('re-touch-portrait', touch && portrait);
-      document.body.classList.toggle('re-touch-landscape', touch && !portrait);
+      document.body.classList.toggle('re-touch-portrait', touchPortrait);
+      document.body.classList.toggle('re-touch-landscape', touchLandscape);
       document.body.classList.toggle('re-desktop-device', !touch);
 
       wrapper.style.width = scaledWidth + 'px';
       wrapper.style.height = scaledHeight + 'px';
       wrapper.style.maxWidth = '100%';
-      stage.style.transformOrigin = 'top left';
-      stage.style.transform = 'translateZ(0) scale(' + scale + ')';
+      wrapper.style.margin = '0 auto';
+      stage.style.transformOrigin = touchLandscape ? 'top center' : 'top left';
+      stage.style.left = touchLandscape ? '50%' : '0';
+      stage.style.margin = '0';
+      stage.style.transform = touchLandscape
+        ? 'translate3d(-50%, 0, 0) scale(' + scale + ')'
+        : 'translate3d(0, 0, 0) scale(' + scale + ')';
       document.body.style.minHeight = Math.max(scaledHeight, viewport.height) + 'px';
       document.body.style.width = '100%';
+      document.body.style.overflowX = 'hidden';
     }
 
     function requestUpdate() {
