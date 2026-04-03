@@ -278,27 +278,61 @@
 
 
 
+
+  function applyDeviceProfileClasses() {
+    var root = document.documentElement;
+    var body = document.body;
+    var ua = navigator.userAgent || '';
+    var coarse = false;
+    var noHover = false;
+    try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (_error) {}
+    try { noHover = window.matchMedia('(hover: none)').matches; } catch (_error) {}
+    var maxTouch = Number(navigator.maxTouchPoints || 0);
+    var mobileUa = /Android|iPhone|iPod|Windows Phone|IEMobile|Opera Mini|webOS|BlackBerry/i.test(ua);
+    var tabletUa = /iPad|Tablet|PlayBook|Silk|Kindle|Nexus 7|Nexus 10|SM-T|Tab/i.test(ua);
+    var smallTouchDevice = maxTouch > 0 && coarse && noHover && Math.max(screen.width || 0, screen.height || 0) <= 1400;
+    var mobileMode = mobileUa || tabletUa || smallTouchDevice;
+    var portrait = false;
+    try { portrait = window.matchMedia('(orientation: portrait)').matches; } catch (_error) { portrait = (window.innerHeight || 0) >= (window.innerWidth || 0); }
+
+    [root, body].forEach(function (node) {
+      if (!node) return;
+      node.classList.remove('re-device-mobile', 're-device-desktop', 're-orientation-portrait', 're-orientation-landscape');
+      node.classList.add(mobileMode ? 're-device-mobile' : 're-device-desktop');
+      node.classList.add(portrait ? 're-orientation-portrait' : 're-orientation-landscape');
+      node.setAttribute('data-re-device', mobileMode ? 'mobile' : 'desktop');
+      node.setAttribute('data-re-orientation', portrait ? 'portrait' : 'landscape');
+    });
+
+    return {
+      mobileMode: mobileMode,
+      portrait: portrait
+    };
+  }
+
   function bindResponsiveStage() {
     var stage = document.getElementById('page-stage');
     var wrapper = document.getElementById('page-stage-wrapper');
     if (!stage || !wrapper) return;
 
-    var rootStyle = getComputedStyle(document.documentElement);
-    var baseWidth = parseFloat(rootStyle.getPropertyValue('--re-stage-width')) || 1380;
-    var baseHeight = parseFloat(rootStyle.getPropertyValue('--re-stage-height')) || 1008;
-
     function updateStageScale() {
+      var profile = applyDeviceProfileClasses();
+      var rootStyle = getComputedStyle(document.documentElement);
+      var baseWidth = parseFloat(rootStyle.getPropertyValue('--re-stage-width')) || 1380;
+      var baseHeight = parseFloat(rootStyle.getPropertyValue('--re-stage-height')) || 1008;
       var viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-      var gutter = viewportWidth <= 768 ? 12 : 24;
-      var availableWidth = Math.max(320, viewportWidth - gutter);
-      var scale = Math.min(1, availableWidth / baseWidth);
+      var isPortraitMobile = !!(profile && profile.mobileMode && profile.portrait);
+      var gutter = isPortraitMobile ? 0 : (viewportWidth <= 768 ? 12 : 24);
+      var availableWidth = Math.max(isPortraitMobile ? 280 : 320, viewportWidth - gutter);
+      var scale = isPortraitMobile ? Math.min(1.45, availableWidth / baseWidth) : Math.min(1, availableWidth / baseWidth);
+      scale = Math.max(0.68, scale || 1);
       var scaledWidth = Math.round(baseWidth * scale);
       var scaledHeight = Math.round(baseHeight * scale);
 
       wrapper.style.width = scaledWidth + 'px';
       wrapper.style.height = scaledHeight + 'px';
       stage.style.transform = 'scale(' + scale + ')';
-      document.body.style.minHeight = scaledHeight + 'px';
+      if (document.body) document.body.style.minHeight = scaledHeight + 'px';
     }
 
     updateStageScale();
@@ -575,6 +609,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    applyDeviceProfileClasses();
     bindPlayers();
     bindResponsiveStage();
     bindThemeToggles();
