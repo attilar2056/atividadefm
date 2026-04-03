@@ -59,8 +59,10 @@
   }
 
   function createEngine(id, audio, hostNode) {
-    audio.preload = 'none';
-        return {
+    audio.preload = 'auto';
+    try { audio.setAttribute('playsinline', ''); } catch (_error) {}
+    try { audio.crossOrigin = 'anonymous'; } catch (_error) {}
+    return {
       id: id,
       hostNode: hostNode || null,
       audio: audio,
@@ -94,15 +96,18 @@
           engine.hls.attachMedia(engine.audio);
         } else {
           engine.audio.src = safeUrl;
+          try { engine.audio.load(); } catch (_error) {}
         }
         return engine;
       }).catch(function () {
         engine.audio.src = safeUrl;
+        try { engine.audio.load(); } catch (_error) {}
         return engine;
       });
     }
 
     engine.audio.src = safeUrl;
+    try { engine.audio.load(); } catch (_error) {}
     return Promise.resolve(engine);
   }
 
@@ -120,7 +125,7 @@
       engines.set(id, engine);
       var url = player.getAttribute('data-radio-url') || '';
       attachSource(engine, url);
-      ['play', 'pause', 'ended', 'volumechange', 'playing'].forEach(function (eventName) {
+      ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
         audio.addEventListener(eventName, function () { syncAll(); });
       });
       audio.addEventListener('error', function () { syncAll(); });
@@ -164,7 +169,7 @@
           var engine = createEngine(runtimeId, audio, null);
           engines.set(runtimeId, engine);
           attachSource(engine, ownUrl);
-          ['play', 'pause', 'ended', 'volumechange', 'playing'].forEach(function (eventName) {
+          ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
             audio.addEventListener(eventName, function () { syncAll(); });
           });
           audio.addEventListener('error', function () { syncAll(); });
@@ -212,12 +217,8 @@
     function stopEngine(engine) {
       if (!engine) return;
       try { engine.audio.pause(); } catch (_error) {}
-      destroyHls(engine);
-      try {
-        engine.audio.removeAttribute('src');
-        engine.audio.load();
-      } catch (_error) {}
-      engine.lastUrl = '';
+      try { engine.audio.muted = false; } catch (_error) {}
+      syncAll();
     }
 
     function setPlayState(control, shouldPlay) {
@@ -231,10 +232,14 @@
       }
       if (shouldPlay) {
         attachSource(engine, url).then(function () {
+          try {
+            if (engine.audio.readyState < 2) engine.audio.load();
+          } catch (_error) {}
           var p = engine.audio.play();
           if (p && typeof p.catch === 'function') p.catch(function () {});
           setTimeout(syncAll, 20);
           setTimeout(syncAll, 180);
+          setTimeout(syncAll, 600);
         });
       } else {
         stopEngine(engine);
@@ -274,6 +279,12 @@
     });
 
     syncAll();
+
+    Array.prototype.slice.call(document.querySelectorAll('.re-type-player .re-audio')).forEach(function (audio) {
+      try {
+        audio.load();
+      } catch (_error) {}
+    });
   }
 
 
