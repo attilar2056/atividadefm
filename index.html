@@ -2,28 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Rádio Atividade</title>
-  <script>
-    (function () {
-      var ua = navigator.userAgent || '';
-      var coarse = false;
-      var noHover = false;
-      try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (_error) {}
-      try { noHover = window.matchMedia('(hover: none)').matches; } catch (_error) {}
-      var maxTouch = Number(navigator.maxTouchPoints || 0);
-      var mobileUa = /Android|iPhone|iPod|Windows Phone|IEMobile|Opera Mini|webOS|BlackBerry/i.test(ua);
-      var tabletUa = /iPad|Tablet|PlayBook|Silk|Kindle|Nexus 7|Nexus 10|SM-T|Tab/i.test(ua);
-      var smallTouchDevice = maxTouch > 0 && coarse && noHover && Math.max(screen.width || 0, screen.height || 0) <= 1400;
-      var mobileMode = mobileUa || tabletUa || smallTouchDevice;
-      var portrait = false;
-      try { portrait = window.matchMedia('(orientation: portrait)').matches; } catch (_error) { portrait = (window.innerHeight || 0) >= (window.innerWidth || 0); }
-      var root = document.documentElement;
-      root.classList.remove('re-device-mobile', 're-device-desktop', 're-orientation-portrait', 're-orientation-landscape');
-      root.classList.add(mobileMode ? 're-device-mobile' : 're-device-desktop');
-      root.classList.add(portrait ? 're-orientation-portrait' : 're-orientation-landscape');
-    })();
-  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>

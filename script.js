@@ -278,66 +278,74 @@
 
 
 
-
-  function applyDeviceProfileClasses() {
-    var root = document.documentElement;
-    var body = document.body;
-    var ua = navigator.userAgent || '';
-    var coarse = false;
-    var noHover = false;
-    try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (_error) {}
-    try { noHover = window.matchMedia('(hover: none)').matches; } catch (_error) {}
-    var maxTouch = Number(navigator.maxTouchPoints || 0);
-    var mobileUa = /Android|iPhone|iPod|Windows Phone|IEMobile|Opera Mini|webOS|BlackBerry/i.test(ua);
-    var tabletUa = /iPad|Tablet|PlayBook|Silk|Kindle|Nexus 7|Nexus 10|SM-T|Tab/i.test(ua);
-    var smallTouchDevice = maxTouch > 0 && coarse && noHover && Math.max(screen.width || 0, screen.height || 0) <= 1400;
-    var mobileMode = mobileUa || tabletUa || smallTouchDevice;
-    var portrait = false;
-    try { portrait = window.matchMedia('(orientation: portrait)').matches; } catch (_error) { portrait = (window.innerHeight || 0) >= (window.innerWidth || 0); }
-
-    [root, body].forEach(function (node) {
-      if (!node) return;
-      node.classList.remove('re-device-mobile', 're-device-desktop', 're-orientation-portrait', 're-orientation-landscape');
-      node.classList.add(mobileMode ? 're-device-mobile' : 're-device-desktop');
-      node.classList.add(portrait ? 're-orientation-portrait' : 're-orientation-landscape');
-      node.setAttribute('data-re-device', mobileMode ? 'mobile' : 'desktop');
-      node.setAttribute('data-re-orientation', portrait ? 'portrait' : 'landscape');
-    });
-
-    return {
-      mobileMode: mobileMode,
-      portrait: portrait
-    };
-  }
-
   function bindResponsiveStage() {
     var stage = document.getElementById('page-stage');
     var wrapper = document.getElementById('page-stage-wrapper');
     if (!stage || !wrapper) return;
 
+    function getViewportBox() {
+      var vv = window.visualViewport;
+      return {
+        width: Math.max(1, Math.round((vv && vv.width) || document.documentElement.clientWidth || window.innerWidth || 0)),
+        height: Math.max(1, Math.round((vv && vv.height) || document.documentElement.clientHeight || window.innerHeight || 0))
+      };
+    }
+
+    function isTouchDevice() {
+      return !!(
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+        navigator.maxTouchPoints > 0 ||
+        /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent || '')
+      );
+    }
+
+    var scheduled = false;
     function updateStageScale() {
-      var profile = applyDeviceProfileClasses();
+      scheduled = false;
       var rootStyle = getComputedStyle(document.documentElement);
       var baseWidth = parseFloat(rootStyle.getPropertyValue('--re-stage-width')) || 1380;
       var baseHeight = parseFloat(rootStyle.getPropertyValue('--re-stage-height')) || 1008;
-      var viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-      var isPortraitMobile = !!(profile && profile.mobileMode && profile.portrait);
-      var gutter = isPortraitMobile ? 0 : (viewportWidth <= 768 ? 12 : 24);
-      var availableWidth = Math.max(isPortraitMobile ? 280 : 320, viewportWidth - gutter);
-      var scale = isPortraitMobile ? Math.min(1.45, availableWidth / baseWidth) : Math.min(1, availableWidth / baseWidth);
-      scale = Math.max(0.68, scale || 1);
-      var scaledWidth = Math.round(baseWidth * scale);
-      var scaledHeight = Math.round(baseHeight * scale);
+      var viewport = getViewportBox();
+      var touch = isTouchDevice();
+      var portrait = viewport.height >= viewport.width;
+      var narrowScreen = viewport.width <= 900;
+      var shouldUseLandscapeFit = touch && !portrait;
+      var gutter = shouldUseLandscapeFit ? 0 : (narrowScreen ? 0 : 24);
+      var availableWidth = Math.max(1, viewport.width - gutter);
+      var availableHeight = Math.max(1, viewport.height - (touch ? 0 : 12));
+      var widthScale = availableWidth / baseWidth;
+      var heightScale = availableHeight / baseHeight;
+      var scale = shouldUseLandscapeFit ? Math.min(1, widthScale, heightScale) : Math.min(1, widthScale);
+      var scaledWidth = Math.max(1, Math.round(baseWidth * scale));
+      var scaledHeight = Math.max(1, Math.round(baseHeight * scale));
+
+      document.body.classList.toggle('re-touch-device', touch);
+      document.body.classList.toggle('re-touch-portrait', touch && portrait);
+      document.body.classList.toggle('re-touch-landscape', touch && !portrait);
+      document.body.classList.toggle('re-desktop-device', !touch);
 
       wrapper.style.width = scaledWidth + 'px';
       wrapper.style.height = scaledHeight + 'px';
-      stage.style.transform = 'scale(' + scale + ')';
-      if (document.body) document.body.style.minHeight = scaledHeight + 'px';
+      wrapper.style.maxWidth = '100%';
+      stage.style.transformOrigin = 'top left';
+      stage.style.transform = 'translateZ(0) scale(' + scale + ')';
+      document.body.style.minHeight = Math.max(scaledHeight, viewport.height) + 'px';
+      document.body.style.width = '100%';
+    }
+
+    function requestUpdate() {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(updateStageScale);
     }
 
     updateStageScale();
-    window.addEventListener('resize', updateStageScale, { passive: true });
-    window.addEventListener('orientationchange', updateStageScale, { passive: true });
+    window.addEventListener('resize', requestUpdate, { passive: true });
+    window.addEventListener('orientationchange', requestUpdate, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', requestUpdate, { passive: true });
+      window.visualViewport.addEventListener('scroll', requestUpdate, { passive: true });
+    }
   }
 
   function bindThemeToggles() {
@@ -609,7 +617,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    applyDeviceProfileClasses();
     bindPlayers();
     bindResponsiveStage();
     bindThemeToggles();
