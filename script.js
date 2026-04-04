@@ -68,8 +68,125 @@
       audio: audio,
       hls: null,
       lastUrl: '',
-      defaultVolume: Number(hostNode && hostNode.getAttribute('data-volume') || 1) || 1
+      defaultVolume: Number(hostNode && hostNode.getAttribute('data-volume') || 1) || 1,
+      wantPlay: false,
+      waitingForAudio: false,
+      audioDetected: false,
+      audioContext: null,
+      sourceNode: null,
+      analyserNode: null,
+      frequencyData: null,
+      timeData: null,
+      detectInterval: null,
+      detectStartedAt: 0,
+      analyserUnavailable: false
     };
+  }
+
+  function clearAudioDetection(engine) {
+    if (!engine) return;
+    if (engine.detectInterval) {
+      clearInterval(engine.detectInterval);
+      engine.detectInterval = null;
+    }
+  }
+
+
+  function notifyEngineState(engine) {
+    if (engine && typeof engine.onStateChange === 'function') engine.onStateChange();
+  }
+
+  function ensureAudioAnalyser(engine) {
+    if (!engine || engine.analyserNode) return true;
+    if (engine.analyserUnavailable) return false;
+    try {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error('AudioContext indisponível');
+      if (!window.__reSharedAudioContext) window.__reSharedAudioContext = new AudioContextClass();
+      engine.audioContext = window.__reSharedAudioContext;
+      if (!engine.sourceNode) engine.sourceNode = engine.audioContext.createMediaElementSource(engine.audio);
+      engine.analyserNode = engine.audioContext.createAnalyser();
+      engine.analyserNode.fftSize = 256;
+      engine.analyserNode.smoothingTimeConstant = 0.78;
+      engine.frequencyData = new Uint8Array(engine.analyserNode.frequencyBinCount);
+      engine.timeData = new Uint8Array(engine.analyserNode.fftSize);
+      engine.sourceNode.connect(engine.analyserNode);
+      engine.analyserNode.connect(engine.audioContext.destination);
+      return true;
+    } catch (_error) {
+      engine.analyserUnavailable = true;
+      return false;
+    }
+  }
+
+  function resumeAudioContext(engine) {
+    if (!engine || !engine.audioContext || typeof engine.audioContext.resume !== 'function') return Promise.resolve();
+    if (engine.audioContext.state === 'running') return Promise.resolve();
+    try {
+      var resumed = engine.audioContext.resume();
+      if (resumed && typeof resumed.then === 'function') return resumed.catch(function () {});
+    } catch (_error) {}
+    return Promise.resolve();
+  }
+
+  function measureAudioPresence(engine) {
+    if (!engine || !engine.analyserNode || !engine.frequencyData || !engine.timeData) return false;
+    try {
+      engine.analyserNode.getByteFrequencyData(engine.frequencyData);
+      engine.analyserNode.getByteTimeDomainData(engine.timeData);
+    } catch (_error) {
+      return false;
+    }
+
+    var peakFrequency = 0;
+    for (var i = 0; i < engine.frequencyData.length; i += 1) {
+      if (engine.frequencyData[i] > peakFrequency) peakFrequency = engine.frequencyData[i];
+    }
+
+    var avgDeviation = 0;
+    for (var j = 0; j < engine.timeData.length; j += 1) {
+      avgDeviation += Math.abs(engine.timeData[j] - 128);
+    }
+    avgDeviation = avgDeviation / Math.max(1, engine.timeData.length);
+
+    return peakFrequency >= 12 || avgDeviation >= 1.4;
+  }
+
+  function startAudioDetection(engine) {
+    if (!engine) return;
+    clearAudioDetection(engine);
+    engine.detectStartedAt = Date.now();
+    engine.waitingForAudio = !engine.audioDetected;
+    engine.detectInterval = setInterval(function () {
+      if (!engine.wantPlay) {
+        clearAudioDetection(engine);
+        return;
+      }
+      if (!engine.audio || engine.audio.paused || engine.audio.ended) return;
+      if (engine.audioDetected) {
+        engine.waitingForAudio = false;
+        clearAudioDetection(engine);
+        notifyEngineState(engine);
+        return;
+      }
+      if (engine.audio.muted || Number(engine.audio.volume || 0) <= 0) {
+        engine.waitingForAudio = false;
+        notifyEngineState(engine);
+        return;
+      }
+
+      var detected = measureAudioPresence(engine);
+      if (detected) {
+        engine.audioDetected = true;
+        engine.waitingForAudio = false;
+        clearAudioDetection(engine);
+        notifyEngineState(engine);
+        return;
+      }
+
+      engine.waitingForAudio = true;
+      notifyEngineState(engine);
+    }, 120);
   }
 
   function destroyHls(engine) {
@@ -113,7 +230,47 @@
 
   function bindPlayers() {
     var engines = new Map();
+
+    function updateSliderAppearance(slider) {
+      if (!slider) return;
+      var min = Number(slider.min || 0);
+      var max = Number(slider.max || 100);
+      var value = Number(slider.value || 0);
+      var range = max - min || 1;
+      var percent = Math.max(0, Math.min(100, ((value - min) / range) * 100));
+      slider.style.setProperty('--volume-percent', percent.toFixed(2) + '%');
+    }
+
+    function ensureAudioControlMarkup() {
+      Array.prototype.slice.call(document.querySelectorAll('.re-type-volume-control')).forEach(function (host) {
+        var muteBtn = host.querySelector('.re-mute-btn');
+        if (muteBtn) {
+          muteBtn.textContent = '';
+          muteBtn.setAttribute('title', 'Mutar ou desmutar');
+        }
+        if (!host.querySelector('.re-live-badge')) {
+          var live = document.createElement('div');
+          live.className = 're-live-badge';
+          live.hidden = true;
+          var dot = document.createElement('span');
+          dot.className = 're-live-dot';
+          var text = document.createElement('span');
+          text.textContent = 'AO VIVO';
+          live.appendChild(dot);
+          live.appendChild(text);
+          host.appendChild(live);
+        }
+        var slider = host.querySelector('.re-volume-slider');
+        if (slider) updateSliderAppearance(slider);
+      });
+
+      Array.prototype.slice.call(document.querySelectorAll('.re-type-player .re-mute-btn')).forEach(function (btn) {
+        btn.textContent = '';
+      });
+    }
+
     var controls = Array.prototype.slice.call(document.querySelectorAll('.re-type-player, .re-type-play-toggle, .re-type-volume-control, .re-type-vinyl'));
+    ensureAudioControlMarkup();
     var actualPlayers = Array.prototype.slice.call(document.querySelectorAll('.re-type-player'));
 
     actualPlayers.forEach(function (player) {
@@ -121,14 +278,43 @@
       if (!audio) return;
       var id = player.getAttribute('data-id');
       var engine = createEngine(id, audio, player);
+      engine.onStateChange = function () { syncAll(); };
       engine.audio.volume = Math.max(0, Math.min(1, Number(player.getAttribute('data-volume') || 1)));
       engines.set(id, engine);
       var url = player.getAttribute('data-radio-url') || '';
       attachSource(engine, url);
       ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
-        audio.addEventListener(eventName, function () { syncAll(); });
+        audio.addEventListener(eventName, function () {
+          if (eventName === 'pause' || eventName === 'ended') {
+            if (!engine.wantPlay) {
+              engine.waitingForAudio = false;
+              engine.audioDetected = false;
+            }
+          }
+          if (eventName === 'waiting' && engine.wantPlay && !engine.audioDetected && !audio.muted && Number(audio.volume || 0) > 0) {
+            engine.waitingForAudio = true;
+          }
+          if (eventName === 'playing' && engine.wantPlay && !engine.audioDetected && !audio.muted && Number(audio.volume || 0) > 0) {
+            engine.waitingForAudio = true;
+            startAudioDetection(engine);
+          }
+          if (eventName === 'volumechange' && (audio.muted || Number(audio.volume || 0) <= 0) && !engine.audioDetected) {
+            engine.waitingForAudio = false;
+          }
+          if (eventName === 'volumechange' && !audio.muted && Number(audio.volume || 0) > 0 && engine.wantPlay && !engine.audioDetected) {
+            engine.waitingForAudio = true;
+            startAudioDetection(engine);
+          }
+          notifyEngineState(engine);
+        });
       });
-      audio.addEventListener('error', function () { syncAll(); });
+      audio.addEventListener('error', function () {
+        engine.wantPlay = false;
+        engine.waitingForAudio = false;
+        engine.audioDetected = false;
+        clearAudioDetection(engine);
+        notifyEngineState(engine);
+      });
     });
 
     function engineFromControl(control) {
@@ -167,6 +353,7 @@
         if (!engines.has(runtimeId)) {
           var audio = new Audio();
           var engine = createEngine(runtimeId, audio, null);
+          engine.onStateChange = function () { syncAll(); };
           engines.set(runtimeId, engine);
           attachSource(engine, ownUrl);
           ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
@@ -193,17 +380,31 @@
     function syncHost(host, engine) {
       if (!host || !engine) return;
       var audio = engine.audio;
-      var playing = !!audio && !audio.paused && !audio.ended;
+      var started = !!engine.wantPlay;
       var muted = !!audio && (!!audio.muted || Number(audio.volume || 0) === 0);
+      var liveActive = started && !!engine.audioDetected && !!audio && !audio.paused && !audio.ended;
+      var loading = started && !liveActive && !!engine.waitingForAudio && !muted;
       var volumeValue = Math.round(Math.max(0, Math.min(1, Number(audio.volume || 0))) * 100);
-      host.classList.toggle('is-playing', playing);
+      host.classList.toggle('is-playing', started);
+      host.classList.toggle('is-live-active', liveActive);
+      host.classList.toggle('is-loading', loading);
       host.classList.toggle('is-muted', muted);
       var live = host.querySelector('.re-live-badge');
-      if (live) live.hidden = !playing;
+      if (live) {
+        var liveText = live.querySelector('span:last-child');
+        live.hidden = !(liveActive || loading);
+        live.classList.toggle('is-loading', loading);
+        live.classList.toggle('is-live', liveActive);
+        if (liveText) liveText.textContent = loading ? 'CARREGANDO AGUARDE' : 'AO VIVO';
+      }
       var muteBtn = host.querySelector('.re-mute-btn');
-      if (muteBtn) muteBtn.textContent = muted ? '🔇' : '🔊';
+      if (muteBtn) {
+        muteBtn.setAttribute('aria-label', muted ? 'Desmutar' : 'Mutar');
+        muteBtn.setAttribute('title', muted ? 'Desmutar' : 'Mutar');
+      }
       var slider = host.querySelector('.re-volume-slider');
       if (slider && String(slider.value) !== String(volumeValue)) slider.value = String(volumeValue);
+      if (slider) updateSliderAppearance(slider);
     }
 
     function syncAll() {
@@ -216,9 +417,13 @@
 
     function stopEngine(engine) {
       if (!engine) return;
+      engine.wantPlay = false;
+      engine.waitingForAudio = false;
+      engine.audioDetected = false;
+      clearAudioDetection(engine);
       try { engine.audio.pause(); } catch (_error) {}
-      try { engine.audio.muted = false; } catch (_error) {}
-      syncAll();
+      try { if (Number.isFinite(engine.audio.currentTime)) engine.audio.currentTime = 0; } catch (_error) {}
+      notifyEngineState(engine);
     }
 
     function setPlayState(control, shouldPlay) {
@@ -231,15 +436,31 @@
         url = host ? (host.getAttribute('data-radio-url') || '') : '';
       }
       if (shouldPlay) {
+        engine.wantPlay = true;
+        engine.waitingForAudio = true;
+        engine.audioDetected = false;
+        ensureAudioAnalyser(engine);
+        notifyEngineState(engine);
         attachSource(engine, url).then(function () {
           try {
             if (engine.audio.readyState < 2) engine.audio.load();
           } catch (_error) {}
-          var p = engine.audio.play();
-          if (p && typeof p.catch === 'function') p.catch(function () {});
-          setTimeout(syncAll, 20);
-          setTimeout(syncAll, 180);
-          setTimeout(syncAll, 600);
+          resumeAudioContext(engine).then(function () {
+            var p = engine.audio.play();
+            if (p && typeof p.catch === 'function') {
+              p.catch(function () {
+                engine.wantPlay = false;
+                engine.waitingForAudio = false;
+                engine.audioDetected = false;
+                clearAudioDetection(engine);
+                notifyEngineState(engine);
+              });
+            }
+            startAudioDetection(engine);
+            setTimeout(syncAll, 20);
+            setTimeout(syncAll, 180);
+            setTimeout(syncAll, 600);
+          });
         });
       } else {
         stopEngine(engine);
@@ -252,7 +473,7 @@
       var engine = engineFromControl(control);
       if (!engine) return;
       engine.audio.muted = !engine.audio.muted;
-      syncAll();
+      notifyEngineState(engine);
     }
 
     function setVolume(control, value) {
@@ -260,7 +481,10 @@
       if (!engine) return;
       engine.audio.volume = Math.max(0, Math.min(1, Number(value || 0) / 100));
       if (engine.audio.volume > 0 && engine.audio.muted) engine.audio.muted = false;
-      syncAll();
+      var host = control && (control.classList.contains('re-element') ? control : control.closest('.re-element'));
+      var slider = host ? host.querySelector('.re-volume-slider') : null;
+      if (slider) updateSliderAppearance(slider);
+      notifyEngineState(engine);
     }
 
     Array.prototype.slice.call(document.querySelectorAll('.re-play-btn')).forEach(function (btn) {
@@ -275,7 +499,11 @@
       btn.addEventListener('click', function () { toggleMute(btn.closest('.re-element') || btn.parentElement); });
     });
     Array.prototype.slice.call(document.querySelectorAll('.re-volume-slider')).forEach(function (slider) {
-      slider.addEventListener('input', function () { setVolume(slider.closest('.re-element') || slider.parentElement, slider.value); });
+      updateSliderAppearance(slider);
+      slider.addEventListener('input', function () {
+        updateSliderAppearance(slider);
+        setVolume(slider.closest('.re-element') || slider.parentElement, slider.value);
+      });
     });
 
     syncAll();
