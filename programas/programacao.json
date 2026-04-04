@@ -1,0 +1,951 @@
+{
+  "timezone": "America/Sao_Paulo",
+  "timeApiUrl": "https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=is_day&timezone=America/Sao_Paulo&forecast_days=1",
+  "programas": [
+    {
+      "id": "programa_seg_0_419",
+      "title": "Uma hora só de musica",
+      "host": "Auto",
+      "locutor": "Auto",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775334150296_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_420_539",
+      "title": "Manhã de sucessos",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1775334197640_1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775334309624_1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_0_419",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "00:00",
+      "end": "06:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_420_539",
+      "title": "Sucesso da Manhã",
+      "host": "Dani Vox",
+      "locutor": "Dani Vox",
+      "start": "07:00",
+      "end": "08:59",
+      "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.png",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_540_659",
+      "title": "Top Hits – Primeira Edição",
+      "host": "Marlos Monteiro",
+      "locutor": "Marlos Monteiro",
+      "start": "09:00",
+      "end": "10:59",
+      "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_660_779",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "11:00",
+      "end": "12:59",
+      "image": "assets/uploads/1775233909947_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_780_959",
+      "title": "Top Hits",
+      "host": "Alex Alves",
+      "locutor": "Alex Alves",
+      "start": "13:00",
+      "end": "15:59",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_960_1079",
+      "title": "Top Hits 2º Edição",
+      "host": "Atila Ribeiro",
+      "locutor": "Atila Ribeiro",
+      "start": "16:00",
+      "end": "17:59",
+      "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_1080_1139",
+      "title": "Clube do Charme",
+      "host": "John Boy",
+      "locutor": "John Boy",
+      "start": "18:00",
+      "end": "18:59",
+      "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_1140_1199",
+      "title": "A Voz do Brasil",
+      "host": "Diversos",
+      "locutor": "Diversos",
+      "start": "19:00",
+      "end": "19:59",
+      "image": "assets/uploads/1775234080144_A_Voz_do_Brasil_103_1_FM__1_.png",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_dom_1200_1439",
+      "title": "1 Hora Só de Músicas",
+      "host": "Programação musical",
+      "locutor": "Programação musical",
+      "start": "20:00",
+      "end": "23:59",
+      "image": "assets/uploads/1775234292822_Uma_hora_de_m__sica_na_Atividade_FM.png",
+      "diaDaSemana": [
+        "dom"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    }
+  ]
+}

@@ -427,3 +427,10 @@ html.re-dark-theme .re-theme-icon-moon, body.re-dark-theme .re-theme-icon-moon, 
     font-size: 58px !important;
   }
 }
+
+.re-map-poll-slot { overflow:hidden; background:#305fbd !important; }
+.re-map-poll-slot .re-map-poll-image,
+.re-map-poll-slot .re-map-poll-frame { width:100%; height:100%; display:block; border:0; border-radius:3px; }
+.re-map-poll-slot .re-map-poll-frame { background:#305fbd; display:none; }
+.re-map-poll-slot.is-poll-active .re-map-poll-image { display:none; }
+.re-map-poll-slot.is-poll-active .re-map-poll-frame { display:block; }

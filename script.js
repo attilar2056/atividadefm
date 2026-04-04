@@ -14,6 +14,55 @@
     return hlsReadyPromise;
   }
 
+  function stripAccents(value) {
+    var text = String(value || '');
+    if (typeof text.normalize === 'function') {
+      return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+    return text;
+  }
+
+  function normalizeWeekdayToken(value) {
+    var text = stripAccents(String(value || '')).toLowerCase().replace(/[^a-z]/g, '');
+    var map = {
+      dom: 'dom', domingo: 'dom', sun: 'dom', sunday: 'dom',
+      seg: 'seg', segunda: 'seg', segundafeira: 'seg', mon: 'seg', monday: 'seg',
+      ter: 'ter', terca: 'ter', tercafeira: 'ter', tue: 'ter', tuesday: 'ter',
+      quar: 'quar', quarta: 'quar', quartafeira: 'quar', wed: 'quar', wednesday: 'quar',
+      qui: 'qui', quinta: 'qui', quintafeira: 'qui', thu: 'qui', thursday: 'qui',
+      sex: 'sex', sexta: 'sex', sextafeira: 'sex', fri: 'sex', friday: 'sex',
+      sab: 'sab', sabado: 'sab', sat: 'sab', saturday: 'sab'
+    };
+    return map[text] || '';
+  }
+
+  function normalizeWeekdays(value) {
+    var source = Array.isArray(value) ? value : String(value || '').split(/[\s,;|]+/);
+    var normalized = [];
+    source.forEach(function (part) {
+      var token = normalizeWeekdayToken(part);
+      if (token && normalized.indexOf(token) === -1) normalized.push(token);
+    });
+    return normalized;
+  }
+
+  function cloneScheduleItem(item) {
+    item = item || {};
+    return {
+      id: item.id || '',
+      title: item.title || item.programa || '',
+      host: item.host || item.locutor || '',
+      locutor: item.locutor || item.host || '',
+      start: item.start || item.inicio || '',
+      end: item.end || item.fim || '',
+      image: item.image || item.imagem || '',
+      diaDaSemana: normalizeWeekdays(item.diaDaSemana || item.dayOfWeek || item.days || item.weekdays || item.dias || []),
+      photoX: Number(item.photoX || 0),
+      photoY: Number(item.photoY || 0),
+      photoZoom: Math.max(0.1, Number(item.photoZoom || 1) || 1)
+    };
+  }
+
   function parseSchedule(text) {
     return String(text || '').split(/\n+/).map(function (line) {
       var trimmed = line.trim();
@@ -21,7 +70,7 @@
       var parts = trimmed.split('|').map(function (p) { return p.trim(); });
       var range = String(parts[0] || '').split('-').map(function (p) { return p.trim(); });
       if (range.length !== 2) return null;
-      return { start: range[0], end: range[1], title: parts[1] || '', image: parts[2] || '' };
+      return cloneScheduleItem({ start: range[0], end: range[1], title: parts[1] || '', image: parts[2] || '' });
     }).filter(Boolean);
   }
 
@@ -31,27 +80,313 @@
     return Number(m[1]) * 60 + Number(m[2]);
   }
 
-  function currentMinutesForTimezone(timeZone) {
-    var formatter = new Intl.DateTimeFormat('pt-BR', { timeZone: timeZone || 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
-    var parts = formatter.formatToParts(new Date());
-    var hour = Number((parts.find(function (p) { return p.type === 'hour'; }) || {}).value || 0);
-    var minute = Number((parts.find(function (p) { return p.type === 'minute'; }) || {}).value || 0);
-    return hour * 60 + minute;
+  var WEEKDAY_ORDER = ['dom', 'seg', 'ter', 'quar', 'qui', 'sex', 'sab'];
+  var PROGRAMS_SOURCE_CACHE = Object.create(null);
+  var TIME_SOURCE_CACHE = Object.create(null);
+  var RE_DEBUG_FLAG = /(?:[?&]debugProgramacao=1(?:&|$))|(?:#.*debugProgramacao=1)/.test(String(window.location && (window.location.search + window.location.hash) || ''));
+  var RE_DEBUG_PANEL = null;
+
+  function getDebugPanel() {
+    if (!RE_DEBUG_FLAG) return null;
+    if (RE_DEBUG_PANEL && RE_DEBUG_PANEL.parentNode) return RE_DEBUG_PANEL;
+    var panel = document.createElement('div');
+    panel.id = 're-debug-programacao-panel';
+    panel.style.position = 'fixed';
+    panel.style.left = '12px';
+    panel.style.bottom = '12px';
+    panel.style.width = 'min(560px, calc(100vw - 24px))';
+    panel.style.maxHeight = '40vh';
+    panel.style.overflow = 'auto';
+    panel.style.padding = '10px 12px';
+    panel.style.background = 'rgba(0,0,0,0.82)';
+    panel.style.color = '#7CFFB2';
+    panel.style.font = '12px/1.45 Consolas, Monaco, monospace';
+    panel.style.border = '1px solid rgba(255,255,255,0.16)';
+    panel.style.borderRadius = '10px';
+    panel.style.zIndex = '2147483647';
+    panel.style.whiteSpace = 'pre-wrap';
+    panel.style.boxSizing = 'border-box';
+    panel.innerHTML = '<div style="font-weight:700;color:#fff;margin-bottom:6px">Debug programação</div>';
+    document.body.appendChild(panel);
+    RE_DEBUG_PANEL = panel;
+    return panel;
   }
 
-  function findProgram(items, minutes) {
-    for (var i = 0; i < items.length; i += 1) {
-      var item = items[i];
-      var start = timeToMinutes(item.start);
-      var end = timeToMinutes(item.end);
-      if (start === null || end === null) continue;
-      if (end >= start) {
-        if (minutes >= start && minutes <= end) return item;
-      } else if (minutes >= start || minutes <= end) {
-        return item;
-      }
+  function debugScheduleLog(scope, message, extra) {
+    var prefix = '[programacao][' + scope + '] ' + message;
+    if (typeof console !== 'undefined' && console.log) {
+      if (typeof extra !== 'undefined') console.log(prefix, extra);
+      else console.log(prefix);
     }
-    return items[0] || null;
+    var panel = getDebugPanel();
+    if (!panel) return;
+    var line = document.createElement('div');
+    line.textContent = new Date().toLocaleTimeString('pt-BR') + ' ' + prefix + (typeof extra === 'undefined' ? '' : ' ' + (function () {
+      try { return JSON.stringify(extra); } catch (_error) { return String(extra); }
+    })());
+    panel.appendChild(line);
+    while (panel.childNodes.length > 18) panel.removeChild(panel.childNodes[1]);
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  function uniqueUrls(values) {
+    var seen = Object.create(null);
+    var list = [];
+    (Array.isArray(values) ? values : []).forEach(function (value) {
+      var url = String(value || '').trim();
+      if (!url || seen[url]) return;
+      seen[url] = true;
+      list.push(url);
+    });
+    return list;
+  }
+
+  function withCacheBust(url) {
+    var joiner = String(url).indexOf('?') === -1 ? '?' : '&';
+    return String(url) + joiner + '_ts=' + Date.now();
+  }
+
+  function pad2(value) {
+    return String(Math.max(0, Number(value) || 0)).padStart(2, '0');
+  }
+
+  function parseLocalIsoParts(isoText) {
+    var match = String(isoText || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!match) return null;
+    return {
+      year: Number(match[1]),
+      month: Number(match[2]),
+      day: Number(match[3]),
+      hour: Number(match[4]),
+      minute: Number(match[5])
+    };
+  }
+
+  function buildClockContextFromIso(isoText, elapsedMs) {
+    var parts = parseLocalIsoParts(isoText);
+    if (!parts) return null;
+    var date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, 0, 0));
+    if (Number(elapsedMs) > 0) date = new Date(date.getTime() + Number(elapsedMs));
+    return {
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: date.getUTCDate(),
+      weekday: WEEKDAY_ORDER[date.getUTCDay()],
+      minutes: (date.getUTCHours() * 60) + date.getUTCMinutes(),
+      isoLocal: date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()) + 'T' + pad2(date.getUTCHours()) + ':' + pad2(date.getUTCMinutes())
+    };
+  }
+
+  function fallbackClockContext(timeZone) {
+    var formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timeZone || 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    var parts = formatter.formatToParts(new Date());
+    var map = {};
+    parts.forEach(function (part) {
+      if (part && part.type) map[part.type] = part.value;
+    });
+    var weekdayMap = { sun: 'dom', mon: 'seg', tue: 'ter', wed: 'quar', thu: 'qui', fri: 'sex', sat: 'sab' };
+    var weekday = weekdayMap[String(map.weekday || '').toLowerCase()] || 'seg';
+    return {
+      year: Number(map.year || 0),
+      month: Number(map.month || 0),
+      day: Number(map.day || 0),
+      weekday: weekday,
+      minutes: (Number(map.hour || 0) * 60) + Number(map.minute || 0),
+      isoLocal: String(map.year || '0000') + '-' + String(map.month || '00') + '-' + String(map.day || '00') + 'T' + String(map.hour || '00') + ':' + String(map.minute || '00')
+    };
+  }
+
+  function getProgramsSourceCandidates(widget) {
+    return uniqueUrls([
+      widget.getAttribute('data-programs-src') || '',
+      '/api/programacao',
+      '/programacao.json',
+      'programas/programacao.json'
+    ]);
+  }
+
+  function getTimeApiUrl(widget) {
+    return widget.getAttribute('data-time-api-url') || 'https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=is_day&timezone=America/Sao_Paulo&forecast_days=1';
+  }
+
+  function getTimezoneForWidget(widget) {
+    return widget.getAttribute('data-timezone') || 'America/Sao_Paulo';
+  }
+
+  function parseScheduleItemsFromWidgetFallback(widget) {
+    var raw = widget.getAttribute('data-schedule-items') || '';
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed.map(cloneScheduleItem).filter(Boolean);
+      } catch (_error) {}
+    }
+    return parseSchedule(widget.getAttribute('data-schedule') || '');
+  }
+
+  function parseProgramsPayload(data) {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.programas)) return data.programas;
+    if (data && Array.isArray(data.programs)) return data.programs;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
+  }
+
+  function loadProgramsForWidget(widget, forceRefresh) {
+    var candidates = getProgramsSourceCandidates(widget);
+    var cacheKey = candidates.join('|') || 'fallback';
+    if (!PROGRAMS_SOURCE_CACHE[cacheKey]) PROGRAMS_SOURCE_CACHE[cacheKey] = { items: null, promise: null, fetchedAt: 0, sourceUrl: '' };
+    var cache = PROGRAMS_SOURCE_CACHE[cacheKey];
+    var maxAgeMs = 60 * 1000;
+    var isFresh = cache.items && cache.items.length && (Date.now() - cache.fetchedAt) < maxAgeMs;
+    if (!forceRefresh && isFresh) return Promise.resolve(cache.items);
+    if (cache.promise) return cache.promise;
+
+    function tryFetchAt(index) {
+      if (index >= candidates.length) {
+        var fallbackItems = parseScheduleItemsFromWidgetFallback(widget);
+        cache.items = fallbackItems;
+        cache.fetchedAt = Date.now();
+        cache.sourceUrl = 'fallback:data-schedule-items';
+        debugScheduleLog('json', 'falhou no JSON externo; usando fallback embutido no HTML', {
+          source: cache.sourceUrl,
+          total: fallbackItems.length
+        });
+        return Promise.resolve(fallbackItems);
+      }
+
+      var sourceUrl = candidates[index];
+      return fetch(withCacheBust(sourceUrl), { cache: 'no-store' }).then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      }).then(function (data) {
+        var items = parseProgramsPayload(data).map(cloneScheduleItem).filter(Boolean);
+        if (!items.length) throw new Error('Programação vazia');
+        cache.items = items;
+        cache.fetchedAt = Date.now();
+        cache.sourceUrl = sourceUrl;
+        debugScheduleLog('json', 'programação carregada', {
+          source: sourceUrl,
+          total: items.length,
+          forceRefresh: !!forceRefresh
+        });
+        return items;
+      }).catch(function (error) {
+        debugScheduleLog('json', 'falha ao carregar fonte de programação', {
+          source: sourceUrl,
+          error: error && error.message ? error.message : String(error)
+        });
+        return tryFetchAt(index + 1);
+      });
+    }
+
+    cache.promise = tryFetchAt(0).then(function (items) {
+      cache.promise = null;
+      return items;
+    }, function (error) {
+      cache.promise = null;
+      throw error;
+    });
+    return cache.promise;
+  }
+
+  function readClockContextFromApiPayload(data) {
+    var current = data && data.current ? data.current : (data && data.current_weather ? data.current_weather : null);
+    var isoText = current && current.time ? current.time : '';
+    return buildClockContextFromIso(isoText, 0);
+  }
+
+  function primeClockForWidget(widget, forceRefresh) {
+    var url = getTimeApiUrl(widget);
+    if (!url) return Promise.resolve(null);
+    if (!TIME_SOURCE_CACHE[url]) TIME_SOURCE_CACHE[url] = { baseIso: '', syncedAt: 0, promise: null };
+    var cache = TIME_SOURCE_CACHE[url];
+    var refreshMs = 5 * 60 * 1000;
+    var isFresh = cache.baseIso && (Date.now() - cache.syncedAt) < refreshMs;
+    if (!forceRefresh && isFresh) return Promise.resolve(buildClockContextFromIso(cache.baseIso, Date.now() - cache.syncedAt));
+    if (cache.promise) return cache.promise;
+    cache.promise = fetch(withCacheBust(url), { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error('Falha ao sincronizar hora (HTTP ' + res.status + ')');
+      return res.json();
+    }).then(function (data) {
+      var ctx = readClockContextFromApiPayload(data);
+      if (ctx && ctx.isoLocal) {
+        cache.baseIso = ctx.isoLocal;
+        cache.syncedAt = Date.now();
+        debugScheduleLog('hora', 'hora sincronizada via API', {
+          source: url,
+          isoLocal: ctx.isoLocal
+        });
+      } else {
+        debugScheduleLog('hora', 'API respondeu sem current.time válido; usando relógio local com timezone', { source: url });
+      }
+      cache.promise = null;
+      return ctx;
+    }, function (error) {
+      cache.promise = null;
+      debugScheduleLog('hora', 'falha ao sincronizar via API; usando relógio local com timezone', {
+        source: url,
+        error: error && error.message ? error.message : String(error)
+      });
+      return null;
+    });
+    return cache.promise;
+  }
+
+  function currentClockContext(widget) {
+    var url = getTimeApiUrl(widget);
+    var timeZone = getTimezoneForWidget(widget);
+    var cache = TIME_SOURCE_CACHE[url];
+    if (cache && cache.baseIso) {
+      var fromApi = buildClockContextFromIso(cache.baseIso, Date.now() - cache.syncedAt);
+      if (fromApi) return fromApi;
+    }
+    return fallbackClockContext(timeZone);
+  }
+
+  function currentMinutesForTimezone(timeZone) {
+    return fallbackClockContext(timeZone).minutes;
+  }
+
+  function previousWeekday(weekday) {
+    var index = WEEKDAY_ORDER.indexOf(weekday);
+    if (index === -1) return 'dom';
+    return WEEKDAY_ORDER[(index + 6) % 7];
+  }
+
+  function matchesProgram(item, clock) {
+    var start = timeToMinutes(item.start);
+    var end = timeToMinutes(item.end);
+    if (start === null || end === null || !clock) return false;
+    var days = normalizeWeekdays(item.diaDaSemana || []);
+    var hasDayFilter = days.length > 0;
+    if (end >= start) {
+      if (hasDayFilter && days.indexOf(clock.weekday) === -1) return false;
+      return clock.minutes >= start && clock.minutes <= end;
+    }
+    if (clock.minutes >= start) {
+      return !hasDayFilter || days.indexOf(clock.weekday) !== -1;
+    }
+    if (clock.minutes <= end) {
+      return !hasDayFilter || days.indexOf(previousWeekday(clock.weekday)) !== -1;
+    }
+    return false;
+  }
+
+  function findProgram(items, clock) {
+    for (var i = 0; i < items.length; i += 1) {
+      if (matchesProgram(items[i], clock)) return items[i];
+    }
+    return null;
   }
 
   function isHlsUrl(url) {
@@ -625,14 +960,7 @@
   }
 
   function parseScheduleItemsFromWidget(widget) {
-    var raw = widget.getAttribute('data-schedule-items') || '';
-    if (raw) {
-      try {
-        var parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      } catch (_error) {}
-    }
-    return parseSchedule(widget.getAttribute('data-schedule') || '');
+    return parseScheduleItemsFromWidgetFallback(widget);
   }
 
   function parseScheduleLayout(widget) {
@@ -769,11 +1097,19 @@
       applyWeatherTextLayout(widget, cityEl, layout, 'city');
       applyWeatherTextLayout(widget, tempEl, layout, 'temp');
       var apiUrl = widget.getAttribute('data-weather-api-url') || 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current_weather=true&timezone=America/Sao_Paulo';
-      fetch(apiUrl).then(function (res) { return res.json(); }).then(function (data) {
+      fetch(withCacheBust(apiUrl), { cache: 'no-store' }).then(function (res) { return res.json(); }).then(function (data) {
         var weather = data && data.current_weather ? data.current_weather : null;
         var temp = Number(weather && weather.temperature);
+        debugScheduleLog('clima', 'clima carregado', {
+          source: apiUrl,
+          temperature: Number.isFinite(temp) ? temp : null
+        });
         if (tempEl) tempEl.textContent = Number.isFinite(temp) ? temp.toFixed(1) + '°C' : '--.-°C';
       }).catch(function (error) {
+        debugScheduleLog('clima', 'erro ao buscar clima', {
+          source: apiUrl,
+          error: error && error.message ? error.message : String(error)
+        });
         console.error('Erro ao buscar clima:', error);
         if (tempEl) tempEl.textContent = '--.-°C';
       });
@@ -810,62 +1146,150 @@
   function bindSchedules() {
     var fullWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-schedule'));
     var photoWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-schedule-photo-current'));
-    function update() {
-      fullWidgets.forEach(function (widget) {
-        var now = currentMinutesForTimezone(widget.getAttribute('data-timezone') || 'America/Sao_Paulo');
-        var items = parseScheduleItemsFromWidget(widget);
-        var current = findProgram(items, now);
-        var layout = parseScheduleLayout(widget);
-        var titleEl = widget.querySelector('.re-schedule-title');
-        var hostEl = widget.querySelector('.re-schedule-host');
-        var timeEl = widget.querySelector('.re-schedule-time');
-        var photoFrame = widget.querySelector('.re-schedule-photo-frame');
-        var imageEl = widget.querySelector('.re-schedule-image');
-        if (photoFrame) {
-          photoFrame.style.left = layout.photoFrameX + 'px';
-          photoFrame.style.top = layout.photoFrameY + 'px';
-          photoFrame.style.width = layout.photoFrameW + 'px';
-          photoFrame.style.height = layout.photoFrameH + 'px';
-        }
-        if (titleEl) { titleEl.style.left = layout.titleX + 'px'; titleEl.style.top = layout.titleY + 'px'; }
-        if (hostEl) { hostEl.style.left = layout.hostX + 'px'; hostEl.style.top = layout.hostY + 'px'; }
-        if (timeEl) { timeEl.style.left = layout.timeX + 'px'; timeEl.style.top = layout.timeY + 'px'; }
-        if (!current) {
-          if (titleEl) titleEl.textContent = 'Sem programação';
-          if (hostEl) hostEl.textContent = '';
-          if (timeEl) timeEl.textContent = '';
-          if (imageEl) imageEl.style.display = 'none';
-          return;
-        }
-        if (titleEl) titleEl.textContent = current.title || 'Programa';
-        if (hostEl) hostEl.textContent = current.host || current.locutor || '';
-        if (timeEl) timeEl.textContent = (current.start || '') + ' às ' + (current.end || '');
-        if (imageEl) {
-          if (current.image) {
-            imageEl.src = current.image;
-            imageEl.style.display = '';
-            imageEl.style.transform = 'translate(' + Number(current.photoX || 0) + 'px, ' + Number(current.photoY || 0) + 'px) scale(' + Math.max(0.1, Number(current.photoZoom || 1)) + ')';
-          } else {
-            imageEl.style.display = 'none';
-          }
-        }
+    var allWidgets = fullWidgets.concat(photoWidgets);
+
+    function ensureWidgetPrograms(widget, forceRefresh) {
+      if (!forceRefresh && widget.__reScheduleItems && widget.__reScheduleItems.length) return Promise.resolve(widget.__reScheduleItems);
+      if (widget.__reScheduleItemsPromise) return widget.__reScheduleItemsPromise;
+      widget.__reScheduleItemsPromise = loadProgramsForWidget(widget, forceRefresh).then(function (items) {
+        widget.__reScheduleItems = items;
+        widget.__reScheduleItemsPromise = null;
+        return items;
+      }, function () {
+        widget.__reScheduleItems = parseScheduleItemsFromWidgetFallback(widget);
+        widget.__reScheduleItemsPromise = null;
+        return widget.__reScheduleItems;
       });
-      photoWidgets.forEach(function (widget) {
-        var now = currentMinutesForTimezone(widget.getAttribute('data-timezone') || 'America/Sao_Paulo');
-        var items = parseScheduleItemsFromWidget(widget);
-        var current = findProgram(items, now);
-        var imageEl = widget.querySelector('.re-current-program-photo');
-        if (!imageEl) return;
-        if (!current || !current.image) {
+      return widget.__reScheduleItemsPromise;
+    }
+
+    function renderFullWidget(widget, items) {
+      var now = currentClockContext(widget);
+      var current = findProgram(items, now);
+      debugScheduleLog('render', 'programa atual calculado', {
+        widget: widget.getAttribute('data-id') || widget.className || 'schedule',
+        isoLocal: now && now.isoLocal ? now.isoLocal : '',
+        weekday: now && now.weekday ? now.weekday : '',
+        minutes: now && typeof now.minutes !== 'undefined' ? now.minutes : null,
+        programId: current && current.id ? current.id : '',
+        title: current && current.title ? current.title : ''
+      });
+      var layout = parseScheduleLayout(widget);
+      var titleEl = widget.querySelector('.re-schedule-title');
+      var hostEl = widget.querySelector('.re-schedule-host');
+      var timeEl = widget.querySelector('.re-schedule-time');
+      var photoFrame = widget.querySelector('.re-schedule-photo-frame');
+      var imageEl = widget.querySelector('.re-schedule-image');
+      if (photoFrame) {
+        photoFrame.style.left = layout.photoFrameX + 'px';
+        photoFrame.style.top = layout.photoFrameY + 'px';
+        photoFrame.style.width = layout.photoFrameW + 'px';
+        photoFrame.style.height = layout.photoFrameH + 'px';
+      }
+      if (titleEl) { titleEl.style.left = layout.titleX + 'px'; titleEl.style.top = layout.titleY + 'px'; }
+      if (hostEl) { hostEl.style.left = layout.hostX + 'px'; hostEl.style.top = layout.hostY + 'px'; }
+      if (timeEl) { timeEl.style.left = layout.timeX + 'px'; timeEl.style.top = layout.timeY + 'px'; }
+      if (!current) {
+        if (titleEl) titleEl.textContent = 'Sem programação';
+        if (hostEl) hostEl.textContent = '';
+        if (timeEl) timeEl.textContent = '';
+        if (imageEl) imageEl.style.display = 'none';
+        return;
+      }
+      if (titleEl) titleEl.textContent = current.title || 'Programa';
+      if (hostEl) hostEl.textContent = current.host || current.locutor || '';
+      if (timeEl) timeEl.textContent = (current.start || '') + ' às ' + (current.end || '');
+      if (imageEl) {
+        if (current.image) {
+          imageEl.src = current.image;
+          imageEl.style.display = '';
+          imageEl.style.transform = 'translate(' + Number(current.photoX || 0) + 'px, ' + Number(current.photoY || 0) + 'px) scale(' + Math.max(0.1, Number(current.photoZoom || 1)) + ')';
+        } else {
           imageEl.style.display = 'none';
-          return;
         }
-        imageEl.src = current.image;
-        imageEl.style.display = '';
+      }
+    }
+
+    function renderPhotoWidget(widget, items) {
+      var now = currentClockContext(widget);
+      var current = findProgram(items, now);
+      var imageEl = widget.querySelector('.re-current-program-photo');
+      if (!imageEl) return;
+      if (!current || !current.image) {
+        imageEl.style.display = 'none';
+        return;
+      }
+      imageEl.src = current.image;
+      imageEl.style.display = '';
+    }
+
+    function refreshSchedules(forceRefresh) {
+      allWidgets.forEach(function (widget) {
+        primeClockForWidget(widget, forceRefresh);
+        ensureWidgetPrograms(widget, forceRefresh).then(function (items) {
+          if (fullWidgets.indexOf(widget) !== -1) renderFullWidget(widget, items || []);
+          if (photoWidgets.indexOf(widget) !== -1) renderPhotoWidget(widget, items || []);
+        });
       });
     }
-    update();
-    setInterval(update, 60 * 1000);
+
+    if (!allWidgets.length) return;
+    refreshSchedules(true);
+    setInterval(function () { refreshSchedules(true); }, 60 * 1000);
+    window.addEventListener('focus', function () { refreshSchedules(true); });
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) refreshSchedules(true);
+    });
+  }
+
+
+  function bindMapPollWidget() {
+    var slot = document.querySelector('.re-map-poll-slot');
+    if (!slot) return;
+    var image = slot.querySelector('.re-map-poll-image');
+    var frame = slot.querySelector('.re-map-poll-frame');
+    if (!image || !frame) return;
+
+    var STATE_URL = 'https://jovial-chaja-1bae9e.netlify.app/.netlify/functions/state-public';
+    var WIDGET_URL = 'https://jovial-chaja-1bae9e.netlify.app/widget.html';
+    var CHECK_INTERVAL = 15 * 60 * 1000;
+    var lastMode = '';
+
+    function applyMode(mode) {
+      var safeMode = String(mode || 'map').toLowerCase();
+      var showWidget = safeMode === 'poll' || safeMode === 'result';
+      if (showWidget) {
+        slot.classList.add('is-poll-active');
+        if (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
+          frame.setAttribute('src', WIDGET_URL);
+        }
+      } else {
+        slot.classList.remove('is-poll-active');
+        if (frame.getAttribute('src') && frame.getAttribute('src') !== 'about:blank') {
+          frame.setAttribute('src', 'about:blank');
+        }
+      }
+      lastMode = safeMode;
+    }
+
+    function checkState() {
+      fetch(STATE_URL, {
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' }
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Falha ao consultar enquete');
+        return res.json();
+      }).then(function (data) {
+        var mode = data && data.mode ? data.mode : (data && data.state && data.state.mode ? data.state.mode : 'map');
+        applyMode(mode);
+      }).catch(function () {
+        if (!lastMode) applyMode('map');
+      });
+    }
+
+    applyMode('map');
+    checkState();
+    setInterval(checkState, CHECK_INTERVAL);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -876,5 +1300,6 @@
     bindWeatherWidgets();
     bindImageLoops();
     bindSchedules();
+    bindMapPollWidget();
   });
 })();
