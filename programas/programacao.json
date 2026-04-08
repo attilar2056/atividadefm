@@ -3,11 +3,26 @@
   "timeApiUrl": "https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=is_day&timezone=America/Sao_Paulo&forecast_days=1",
   "programas": [
     {
-      "id": "programa_seg_0_359",
-      "title": "1 Hora Só de Músicas",
-      "host": "Auto",
-      "locutor": "Auto",
+      "id": "programa_seg_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
       "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "seg"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_seg_180_359",
+      "title": "1 Hora Só de Músicas",
+      "host": "auto 4",
+      "locutor": "auto 4",
+      "start": "03:00",
       "end": "05:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
@@ -183,11 +198,26 @@
       "photoZoom": 1
     },
     {
-      "id": "programa_ter_0_359",
-      "title": "1 Hora Só de Músicas",
-      "host": "Auto",
-      "locutor": "Auto",
+      "id": "programa_ter_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
       "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "ter"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_ter_180_359",
+      "title": "1 Hora Só de Músicas",
+      "host": "auto 4",
+      "locutor": "auto 4",
+      "start": "03:00",
       "end": "05:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
@@ -363,11 +393,26 @@
       "photoZoom": 1
     },
     {
-      "id": "programa_quar_0_359",
-      "title": "1 Hora Só de Músicas",
-      "host": "Auto",
-      "locutor": "Auto",
+      "id": "programa_quar_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
       "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "quar"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_quar_180_359",
+      "title": "1 Hora Só de Músicas",
+      "host": "auto 4",
+      "locutor": "auto 4",
+      "start": "03:00",
       "end": "05:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
@@ -543,11 +588,26 @@
       "photoZoom": 1
     },
     {
-      "id": "programa_qui_0_359",
-      "title": "1 Hora Só de Músicas",
-      "host": "Auto",
-      "locutor": "Auto",
+      "id": "programa_qui_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
       "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "qui"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_qui_180_359",
+      "title": "1 Hora Só de Músicas",
+      "host": "auto 4",
+      "locutor": "auto 4",
+      "start": "03:00",
       "end": "05:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
@@ -723,11 +783,26 @@
       "photoZoom": 1
     },
     {
-      "id": "programa_sex_0_359",
-      "title": "1 Hora Só de Músicas",
-      "host": "Auto",
-      "locutor": "Auto",
+      "id": "programa_sex_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
       "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "sex"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sex_180_359",
+      "title": "1 Hora Só de Músicas",
+      "host": "auto 4",
+      "locutor": "auto 4",
+      "start": "03:00",
       "end": "05:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
@@ -903,11 +978,26 @@
       "photoZoom": 1
     },
     {
-      "id": "programa_sab_0_1439",
+      "id": "programa_sab_0_179",
+      "title": "Programa Insônia",
+      "host": "Caio Martins",
+      "locutor": "Caio Martins",
+      "start": "00:00",
+      "end": "02:59",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
+      "diaDaSemana": [
+        "sab"
+      ],
+      "photoX": 0,
+      "photoY": 0,
+      "photoZoom": 1
+    },
+    {
+      "id": "programa_sab_180_1439",
       "title": "1 Hora Só de Músicas",
       "host": "auto 4",
       "locutor": "auto 4",
-      "start": "00:00",
+      "start": "03:00",
       "end": "23:59",
       "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
       "diaDaSemana": [
