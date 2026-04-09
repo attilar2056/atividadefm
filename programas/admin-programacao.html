@@ -269,6 +269,22 @@
       height: 160px;
     }
 
+    .preview-caption {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .preview-box .thumb.vinyl-thumb,
+    .preview-box .thumb-placeholder.vinyl-thumb {
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      margin: 0 auto;
+    }
+
     .field {
       display: grid;
       gap: 6px;
@@ -393,7 +409,10 @@
         <form id="editForm">
           <div class="form-grid">
             <div class="preview-box">
+              <div class="preview-caption">Foto do programa</div>
               <div id="imagePreviewWrap"></div>
+              <div class="preview-caption" style="margin-top:8px">Vinyl do programa</div>
+              <div id="vinylPreviewWrap"></div>
               <div class="muted" id="editDayLabel"></div>
             </div>
 
@@ -425,6 +444,17 @@
             <div class="field full">
               <label for="programFile">Escolher nova foto</label>
               <input id="programFile" name="programFile" type="file" accept="image/*" />
+            </div>
+
+            <div class="field full">
+              <label for="programVinyl">Vinyl atual</label>
+              <input id="programVinyl" name="programVinyl" type="text" placeholder="assets/base/vinyl.png" />
+              <div class="muted">Se deixar vazio, o site usa automaticamente <strong>assets/base/vinyl.png</strong>.</div>
+            </div>
+
+            <div class="field full">
+              <label for="vinylFile">Escolher novo vinyl</label>
+              <input id="vinylFile" name="vinylFile" type="file" accept="image/*" />
             </div>
 
             <div class="field">
@@ -471,12 +501,15 @@
     const deleteChoiceButton = document.getElementById('deleteChoiceButton');
     const editChoiceButton = document.getElementById('editChoiceButton');
     const imagePreviewWrap = document.getElementById('imagePreviewWrap');
+    const vinylPreviewWrap = document.getElementById('vinylPreviewWrap');
     const programTitle = document.getElementById('programTitle');
     const programLocutor = document.getElementById('programLocutor');
     const programStart = document.getElementById('programStart');
     const programEnd = document.getElementById('programEnd');
     const programImage = document.getElementById('programImage');
     const programFile = document.getElementById('programFile');
+    const programVinyl = document.getElementById('programVinyl');
+    const vinylFile = document.getElementById('vinylFile');
     const photoX = document.getElementById('photoX');
     const photoY = document.getElementById('photoY');
     const photoZoom = document.getElementById('photoZoom');
@@ -614,10 +647,20 @@ async function deleteItemWithDaySuggestions(payload) {
       choiceOverlay.classList.remove('open');
     }
 
+    const DEFAULT_VINYL_PATH = 'assets/base/vinyl.png';
+
     function renderEditPreview(imagePath) {
       imagePreviewWrap.innerHTML = imagePath
         ? '<img class="thumb" src="/' + encodeURI(imagePath).replace(/%2F/g, '/') + '" alt="Preview" style="width:160px;height:160px">'
         : '<div class="thumb-placeholder" style="width:160px;height:160px">Sem<br>imagem</div>';
+    }
+
+    function renderVinylPreview(vinylPath) {
+      const effectivePath = (vinylPath || '').trim() || DEFAULT_VINYL_PATH;
+      const usingDefault = !(vinylPath || '').trim();
+      vinylPreviewWrap.innerHTML = '' +
+        '<img class="thumb vinyl-thumb" src="/' + encodeURI(effectivePath).replace(/%2F/g, '/') + '" alt="Preview do vinyl">' +
+        '<div class="muted" style="text-align:center">' + (usingDefault ? 'Usando o vinyl padrão' : 'Vinyl personalizado deste programa') + '</div>';
     }
 
     function openEdit(item) {
@@ -633,8 +676,11 @@ async function deleteItemWithDaySuggestions(payload) {
       photoX.value = Number(item.photoX || 0);
       photoY.value = Number(item.photoY || 0);
       photoZoom.value = Number(item.photoZoom || 1);
+      programVinyl.value = item.vinyl || '';
       programFile.value = '';
+      vinylFile.value = '';
       renderEditPreview(item.image || '');
+      renderVinylPreview(item.vinyl || '');
       editOverlay.classList.add('open');
     }
 
@@ -697,6 +743,12 @@ async function saveCurrentItem() {
           programImage.value = imagePath;
         }
 
+        let vinylPath = programVinyl.value.trim();
+        if (vinylFile.files && vinylFile.files[0]) {
+          vinylPath = await uploadSelectedFile(vinylFile.files[0], programVinyl.value.trim());
+          programVinyl.value = vinylPath;
+        }
+
         const payload = {
           day: item.day,
           originalStart: item.start,
@@ -706,6 +758,7 @@ async function saveCurrentItem() {
           start: programStart.value,
           end: programEnd.value,
           image: imagePath,
+          vinyl: vinylPath,
           photoX: Number(photoX.value || 0),
           photoY: Number(photoY.value || 0),
           photoZoom: Number(photoZoom.value || 1)
@@ -779,6 +832,32 @@ async function saveCurrentItem() {
     });
 
     deleteChoiceButton.addEventListener('click', deleteCurrentItem);
+    programImage.addEventListener('input', () => {
+      renderEditPreview(programImage.value.trim());
+    });
+
+    programVinyl.addEventListener('input', () => {
+      renderVinylPreview(programVinyl.value.trim());
+    });
+
+    programFile.addEventListener('change', () => {
+      if (programFile.files && programFile.files[0]) {
+        const tempUrl = URL.createObjectURL(programFile.files[0]);
+        renderEditPreview(tempUrl);
+      } else {
+        renderEditPreview(programImage.value.trim());
+      }
+    });
+
+    vinylFile.addEventListener('change', () => {
+      if (vinylFile.files && vinylFile.files[0]) {
+        const tempUrl = URL.createObjectURL(vinylFile.files[0]);
+        renderVinylPreview(tempUrl);
+      } else {
+        renderVinylPreview(programVinyl.value.trim());
+      }
+    });
+
     reloadButton.addEventListener('click', loadState);
 
     programImage.addEventListener('input', () => {

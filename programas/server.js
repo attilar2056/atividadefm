@@ -153,6 +153,7 @@ function cloneSegment(segment) {
     host: segment.host || '',
     locutor: segment.locutor || '',
     image: segment.image || '',
+    vinyl: segment.vinyl || '',
     photoX: Number.isFinite(Number(segment.photoX)) ? Number(segment.photoX) : 0,
     photoY: Number.isFinite(Number(segment.photoY)) ? Number(segment.photoY) : 0,
     photoZoom: Number.isFinite(Number(segment.photoZoom)) ? Number(segment.photoZoom) : 1,
@@ -169,6 +170,7 @@ function makeEmptySegment(day, startMin, endMin) {
     host: '',
     locutor: '',
     image: '',
+    vinyl: '',
     photoX: 0,
     photoY: 0,
     photoZoom: 1,
@@ -184,6 +186,7 @@ function sameProgram(a, b) {
     && String(a.locutor || '') === String(b.locutor || '')
     && String(a.host || '') === String(b.host || '')
     && String(a.image || '') === String(b.image || '')
+    && String(a.vinyl || '') === String(b.vinyl || '')
     && Number(a.photoX || 0) === Number(b.photoX || 0)
     && Number(a.photoY || 0) === Number(b.photoY || 0)
     && Number(a.photoZoom || 1) === Number(b.photoZoom || 1);
@@ -238,15 +241,17 @@ function sanitizeProgramFields(input) {
   const locutor = String(input && (input.locutor || input.host) || '').trim();
   const host = String(input && (input.host || input.locutor) || '').trim() || locutor;
   const image = String(input && input.image || '').trim();
+  const vinyl = String(input && (input.vinyl || input.vinylImage) || '').trim();
   return {
     title,
     locutor,
     host,
     image,
+    vinyl,
     photoX: Number.isFinite(Number(input && input.photoX)) ? Number(input.photoX) : 0,
     photoY: Number.isFinite(Number(input && input.photoY)) ? Number(input.photoY) : 0,
     photoZoom: Number.isFinite(Number(input && input.photoZoom)) ? Number(input.photoZoom) : 1,
-    empty: !title && !locutor && !image
+    empty: !title && !locutor && !image && !vinyl
   };
 }
 
@@ -323,6 +328,7 @@ function dayMapsToSchedule(dayMaps, originalMeta) {
         start: minutesToTime(segment.startMin),
         end: minutesToTime(segment.endMin),
         image: String(segment.image || '').trim(),
+        vinyl: String(segment.vinyl || '').trim(),
         diaDaSemana: [day],
         photoX: Number(segment.photoX || 0),
         photoY: Number(segment.photoY || 0),
@@ -363,6 +369,7 @@ function buildAdminState(schedule) {
         host: segment.host || '',
         locutor: segment.locutor || '',
         image: segment.image || '',
+        vinyl: segment.vinyl || '',
         photoX: Number(segment.photoX || 0),
         photoY: Number(segment.photoY || 0),
         photoZoom: Number(segment.photoZoom || 1),
@@ -441,6 +448,7 @@ function segmentSignature(segment) {
     host: String(segment.host || '').trim(),
     locutor: String(segment.locutor || '').trim(),
     image: String(segment.image || '').trim(),
+    vinyl: String(segment.vinyl || '').trim(),
     photoX: Number(segment.photoX || 0),
     photoY: Number(segment.photoY || 0),
     photoZoom: Number(segment.photoZoom || 1),

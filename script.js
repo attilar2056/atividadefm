@@ -56,6 +56,7 @@
       start: item.start || item.inicio || '',
       end: item.end || item.fim || '',
       image: item.image || item.imagem || '',
+      vinyl: item.vinyl || item.vinylImage || item.disco || '',
       diaDaSemana: normalizeWeekdays(item.diaDaSemana || item.dayOfWeek || item.days || item.weekdays || item.dias || []),
       photoX: Number(item.photoX || 0),
       photoY: Number(item.photoY || 0),
@@ -81,70 +82,9 @@
   }
 
   var WEEKDAY_ORDER = ['dom', 'seg', 'ter', 'quar', 'qui', 'sex', 'sab'];
+  var DEFAULT_VINYL_PATH = 'assets/base/vinyl.png';
   var PROGRAMS_SOURCE_CACHE = Object.create(null);
   var TIME_SOURCE_CACHE = Object.create(null);
-  var RE_DEBUG_FLAG = /(?:[?&]debugProgramacao=1(?:&|$))|(?:#.*debugProgramacao=1)/.test(String(window.location && (window.location.search + window.location.hash) || ''));
-  var RE_DEBUG_PANEL = null;
-
-  function getDebugPanel() {
-    if (!RE_DEBUG_FLAG) return null;
-    if (RE_DEBUG_PANEL && RE_DEBUG_PANEL.parentNode) return RE_DEBUG_PANEL;
-    var panel = document.createElement('div');
-    panel.id = 're-debug-programacao-panel';
-    panel.style.position = 'fixed';
-    panel.style.left = '12px';
-    panel.style.bottom = '12px';
-    panel.style.width = 'min(560px, calc(100vw - 24px))';
-    panel.style.maxHeight = '40vh';
-    panel.style.overflow = 'auto';
-    panel.style.padding = '10px 12px';
-    panel.style.background = 'rgba(0,0,0,0.82)';
-    panel.style.color = '#7CFFB2';
-    panel.style.font = '12px/1.45 Consolas, Monaco, monospace';
-    panel.style.border = '1px solid rgba(255,255,255,0.16)';
-    panel.style.borderRadius = '10px';
-    panel.style.zIndex = '2147483647';
-    panel.style.whiteSpace = 'pre-wrap';
-    panel.style.boxSizing = 'border-box';
-    panel.innerHTML = '<div style="font-weight:700;color:#fff;margin-bottom:6px">Debug programação</div>';
-    document.body.appendChild(panel);
-    RE_DEBUG_PANEL = panel;
-    return panel;
-  }
-
-  function debugScheduleLog(scope, message, extra) {
-    var prefix = '[programacao][' + scope + '] ' + message;
-    if (typeof console !== 'undefined' && console.log) {
-      if (typeof extra !== 'undefined') console.log(prefix, extra);
-      else console.log(prefix);
-    }
-    var panel = getDebugPanel();
-    if (!panel) return;
-    var line = document.createElement('div');
-    line.textContent = new Date().toLocaleTimeString('pt-BR') + ' ' + prefix + (typeof extra === 'undefined' ? '' : ' ' + (function () {
-      try { return JSON.stringify(extra); } catch (_error) { return String(extra); }
-    })());
-    panel.appendChild(line);
-    while (panel.childNodes.length > 18) panel.removeChild(panel.childNodes[1]);
-    panel.scrollTop = panel.scrollHeight;
-  }
-
-  function uniqueUrls(values) {
-    var seen = Object.create(null);
-    var list = [];
-    (Array.isArray(values) ? values : []).forEach(function (value) {
-      var url = String(value || '').trim();
-      if (!url || seen[url]) return;
-      seen[url] = true;
-      list.push(url);
-    });
-    return list;
-  }
-
-  function withCacheBust(url) {
-    var joiner = String(url).indexOf('?') === -1 ? '?' : '&';
-    return String(url) + joiner + '_ts=' + Date.now();
-  }
 
   function pad2(value) {
     return String(Math.max(0, Number(value) || 0)).padStart(2, '0');
@@ -205,21 +145,28 @@
     };
   }
 
-  function getProgramsSourceCandidates(widget) {
-    return uniqueUrls([
-      widget.getAttribute('data-programs-src') || '',
-      '/api/programacao',
-      '/programacao.json',
-      'programas/programacao.json'
-    ]);
+  function findScheduleConfigHost(widget) {
+    if (widget && widget.getAttribute('data-programs-src')) return widget;
+    var owner = document.querySelector('[data-programs-src][data-type="schedule"], [data-programs-src][data-type="schedule-photo-current"], [data-programs-src].re-type-schedule, [data-programs-src].re-type-schedule-photo-current');
+    if (owner) return owner;
+    var anyProgramsSource = document.querySelector('[data-programs-src]');
+    if (anyProgramsSource) return anyProgramsSource;
+    return widget || null;
+  }
+
+  function getProgramsSourceUrl(widget) {
+    var sourceHost = findScheduleConfigHost(widget);
+    return (sourceHost && sourceHost.getAttribute('data-programs-src')) || 'programas/programacao.json';
   }
 
   function getTimeApiUrl(widget) {
-    return widget.getAttribute('data-time-api-url') || 'https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=is_day&timezone=America/Sao_Paulo&forecast_days=1';
+    var sourceHost = findScheduleConfigHost(widget);
+    return (sourceHost && sourceHost.getAttribute('data-time-api-url')) || 'https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=is_day&timezone=America/Sao_Paulo&forecast_days=1';
   }
 
   function getTimezoneForWidget(widget) {
-    return widget.getAttribute('data-timezone') || 'America/Sao_Paulo';
+    var sourceHost = findScheduleConfigHost(widget);
+    return (sourceHost && sourceHost.getAttribute('data-timezone')) || 'America/Sao_Paulo';
   }
 
   function parseScheduleItemsFromWidgetFallback(widget) {
@@ -241,60 +188,26 @@
     return [];
   }
 
-  function loadProgramsForWidget(widget, forceRefresh) {
-    var candidates = getProgramsSourceCandidates(widget);
-    var cacheKey = candidates.join('|') || 'fallback';
-    if (!PROGRAMS_SOURCE_CACHE[cacheKey]) PROGRAMS_SOURCE_CACHE[cacheKey] = { items: null, promise: null, fetchedAt: 0, sourceUrl: '' };
-    var cache = PROGRAMS_SOURCE_CACHE[cacheKey];
-    var maxAgeMs = 60 * 1000;
-    var isFresh = cache.items && cache.items.length && (Date.now() - cache.fetchedAt) < maxAgeMs;
-    if (!forceRefresh && isFresh) return Promise.resolve(cache.items);
+  function loadProgramsForWidget(widget) {
+    var url = getProgramsSourceUrl(widget);
+    if (!url) return Promise.resolve(parseScheduleItemsFromWidgetFallback(widget));
+    if (!PROGRAMS_SOURCE_CACHE[url]) PROGRAMS_SOURCE_CACHE[url] = { items: null, promise: null };
+    var cache = PROGRAMS_SOURCE_CACHE[url];
+    if (cache.items && cache.items.length) return Promise.resolve(cache.items);
     if (cache.promise) return cache.promise;
-
-    function tryFetchAt(index) {
-      if (index >= candidates.length) {
-        var fallbackItems = parseScheduleItemsFromWidgetFallback(widget);
-        cache.items = fallbackItems;
-        cache.fetchedAt = Date.now();
-        cache.sourceUrl = 'fallback:data-schedule-items';
-        debugScheduleLog('json', 'falhou no JSON externo; usando fallback embutido no HTML', {
-          source: cache.sourceUrl,
-          total: fallbackItems.length
-        });
-        return Promise.resolve(fallbackItems);
-      }
-
-      var sourceUrl = candidates[index];
-      return fetch(withCacheBust(sourceUrl), { cache: 'no-store' }).then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      }).then(function (data) {
-        var items = parseProgramsPayload(data).map(cloneScheduleItem).filter(Boolean);
-        if (!items.length) throw new Error('Programação vazia');
-        cache.items = items;
-        cache.fetchedAt = Date.now();
-        cache.sourceUrl = sourceUrl;
-        debugScheduleLog('json', 'programação carregada', {
-          source: sourceUrl,
-          total: items.length,
-          forceRefresh: !!forceRefresh
-        });
-        return items;
-      }).catch(function (error) {
-        debugScheduleLog('json', 'falha ao carregar fonte de programação', {
-          source: sourceUrl,
-          error: error && error.message ? error.message : String(error)
-        });
-        return tryFetchAt(index + 1);
-      });
-    }
-
-    cache.promise = tryFetchAt(0).then(function (items) {
+    cache.promise = fetch(url, { cache: 'no-cache' }).then(function (res) {
+      if (!res.ok) throw new Error('Falha ao carregar programação');
+      return res.json();
+    }).then(function (data) {
+      var items = parseProgramsPayload(data).map(cloneScheduleItem).filter(Boolean);
+      if (!items.length) throw new Error('Programação vazia');
+      cache.items = items;
       cache.promise = null;
       return items;
-    }, function (error) {
+    }, function () {
       cache.promise = null;
-      throw error;
+      cache.items = parseScheduleItemsFromWidgetFallback(widget);
+      return cache.items;
     });
     return cache.promise;
   }
@@ -305,41 +218,29 @@
     return buildClockContextFromIso(isoText, 0);
   }
 
-  function primeClockForWidget(widget, forceRefresh) {
+  function primeClockForWidget(widget) {
     var url = getTimeApiUrl(widget);
-    if (!url) return Promise.resolve(null);
+    if (!url) return;
     if (!TIME_SOURCE_CACHE[url]) TIME_SOURCE_CACHE[url] = { baseIso: '', syncedAt: 0, promise: null };
     var cache = TIME_SOURCE_CACHE[url];
-    var refreshMs = 5 * 60 * 1000;
+    var refreshMs = 15 * 60 * 1000;
     var isFresh = cache.baseIso && (Date.now() - cache.syncedAt) < refreshMs;
-    if (!forceRefresh && isFresh) return Promise.resolve(buildClockContextFromIso(cache.baseIso, Date.now() - cache.syncedAt));
-    if (cache.promise) return cache.promise;
-    cache.promise = fetch(withCacheBust(url), { cache: 'no-store' }).then(function (res) {
-      if (!res.ok) throw new Error('Falha ao sincronizar hora (HTTP ' + res.status + ')');
+    if (isFresh || cache.promise) return;
+    cache.promise = fetch(url, { cache: 'no-cache' }).then(function (res) {
+      if (!res.ok) throw new Error('Falha ao sincronizar hora');
       return res.json();
     }).then(function (data) {
       var ctx = readClockContextFromApiPayload(data);
       if (ctx && ctx.isoLocal) {
         cache.baseIso = ctx.isoLocal;
         cache.syncedAt = Date.now();
-        debugScheduleLog('hora', 'hora sincronizada via API', {
-          source: url,
-          isoLocal: ctx.isoLocal
-        });
-      } else {
-        debugScheduleLog('hora', 'API respondeu sem current.time válido; usando relógio local com timezone', { source: url });
       }
       cache.promise = null;
       return ctx;
-    }, function (error) {
+    }, function () {
       cache.promise = null;
-      debugScheduleLog('hora', 'falha ao sincronizar via API; usando relógio local com timezone', {
-        source: url,
-        error: error && error.message ? error.message : String(error)
-      });
       return null;
     });
-    return cache.promise;
   }
 
   function currentClockContext(widget) {
@@ -1097,19 +998,11 @@
       applyWeatherTextLayout(widget, cityEl, layout, 'city');
       applyWeatherTextLayout(widget, tempEl, layout, 'temp');
       var apiUrl = widget.getAttribute('data-weather-api-url') || 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current_weather=true&timezone=America/Sao_Paulo';
-      fetch(withCacheBust(apiUrl), { cache: 'no-store' }).then(function (res) { return res.json(); }).then(function (data) {
+      fetch(apiUrl).then(function (res) { return res.json(); }).then(function (data) {
         var weather = data && data.current_weather ? data.current_weather : null;
         var temp = Number(weather && weather.temperature);
-        debugScheduleLog('clima', 'clima carregado', {
-          source: apiUrl,
-          temperature: Number.isFinite(temp) ? temp : null
-        });
         if (tempEl) tempEl.textContent = Number.isFinite(temp) ? temp.toFixed(1) + '°C' : '--.-°C';
       }).catch(function (error) {
-        debugScheduleLog('clima', 'erro ao buscar clima', {
-          source: apiUrl,
-          error: error && error.message ? error.message : String(error)
-        });
         console.error('Erro ao buscar clima:', error);
         if (tempEl) tempEl.textContent = '--.-°C';
       });
@@ -1146,12 +1039,13 @@
   function bindSchedules() {
     var fullWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-schedule'));
     var photoWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-schedule-photo-current'));
-    var allWidgets = fullWidgets.concat(photoWidgets);
+    var vinylWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-vinyl'));
+    var allWidgets = fullWidgets.concat(photoWidgets, vinylWidgets);
 
-    function ensureWidgetPrograms(widget, forceRefresh) {
-      if (!forceRefresh && widget.__reScheduleItems && widget.__reScheduleItems.length) return Promise.resolve(widget.__reScheduleItems);
+    function ensureWidgetPrograms(widget) {
+      if (widget.__reScheduleItems && widget.__reScheduleItems.length) return Promise.resolve(widget.__reScheduleItems);
       if (widget.__reScheduleItemsPromise) return widget.__reScheduleItemsPromise;
-      widget.__reScheduleItemsPromise = loadProgramsForWidget(widget, forceRefresh).then(function (items) {
+      widget.__reScheduleItemsPromise = loadProgramsForWidget(widget).then(function (items) {
         widget.__reScheduleItems = items;
         widget.__reScheduleItemsPromise = null;
         return items;
@@ -1166,14 +1060,6 @@
     function renderFullWidget(widget, items) {
       var now = currentClockContext(widget);
       var current = findProgram(items, now);
-      debugScheduleLog('render', 'programa atual calculado', {
-        widget: widget.getAttribute('data-id') || widget.className || 'schedule',
-        isoLocal: now && now.isoLocal ? now.isoLocal : '',
-        weekday: now && now.weekday ? now.weekday : '',
-        minutes: now && typeof now.minutes !== 'undefined' ? now.minutes : null,
-        programId: current && current.id ? current.id : '',
-        title: current && current.title ? current.title : ''
-      });
       var layout = parseScheduleLayout(widget);
       var titleEl = widget.querySelector('.re-schedule-title');
       var hostEl = widget.querySelector('.re-schedule-host');
@@ -1223,23 +1109,30 @@
       imageEl.style.display = '';
     }
 
-    function refreshSchedules(forceRefresh) {
+    function renderVinylWidget(widget, items) {
+      var now = currentClockContext(widget);
+      var current = findProgram(items, now);
+      var imageEl = widget.querySelector('.re-vinyl-image');
+      if (!imageEl) return;
+      var src = current && current.vinyl ? current.vinyl : DEFAULT_VINYL_PATH;
+      if (imageEl.getAttribute('src') !== src) imageEl.setAttribute('src', src);
+      imageEl.style.display = '';
+    }
+
+    function refreshSchedules() {
       allWidgets.forEach(function (widget) {
-        primeClockForWidget(widget, forceRefresh);
-        ensureWidgetPrograms(widget, forceRefresh).then(function (items) {
+        primeClockForWidget(widget);
+        ensureWidgetPrograms(widget).then(function (items) {
           if (fullWidgets.indexOf(widget) !== -1) renderFullWidget(widget, items || []);
           if (photoWidgets.indexOf(widget) !== -1) renderPhotoWidget(widget, items || []);
+          if (vinylWidgets.indexOf(widget) !== -1) renderVinylWidget(widget, items || []);
         });
       });
     }
 
     if (!allWidgets.length) return;
-    refreshSchedules(true);
-    setInterval(function () { refreshSchedules(true); }, 60 * 1000);
-    window.addEventListener('focus', function () { refreshSchedules(true); });
-    document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) refreshSchedules(true);
-    });
+    refreshSchedules();
+    setInterval(refreshSchedules, 60 * 1000);
   }
 
 
