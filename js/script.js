@@ -85,6 +85,10 @@
   var DEFAULT_VINYL_PATH = 'assets/base/vinyl.png';
   var PROGRAMS_SOURCE_CACHE = Object.create(null);
   var TIME_SOURCE_CACHE = Object.create(null);
+  var PAGE_BOOT_CACHE_BUSTER = String(Date.now());
+  var THEME_STORAGE_KEY = 'radioatividade-theme';
+  var DEFAULT_RADIO_STREAM_URL = 'https://stream.zeno.fm/zh7jkchfce4uv';
+  var VOZ_DO_BRASIL_STREAM_URL = 'http://radioaovivo.senado.gov.br/canal2.mp3';
 
   function pad2(value) {
     return String(Math.max(0, Number(value) || 0)).padStart(2, '0');
@@ -169,6 +173,68 @@
     return (sourceHost && sourceHost.getAttribute('data-timezone')) || 'America/Sao_Paulo';
   }
 
+  function buildNoCacheUrl(url, token) {
+    var safeUrl = String(url || '').trim();
+    if (!safeUrl) return '';
+    var separator = safeUrl.indexOf('?') === -1 ? '?' : '&';
+    return safeUrl + separator + '_rt=' + encodeURIComponent(String(token || PAGE_BOOT_CACHE_BUSTER));
+  }
+
+  function setFreshImageSource(imageEl, src, token) {
+    if (!imageEl) return;
+    var baseSrc = String(src || '').trim();
+    if (!baseSrc) {
+      imageEl.removeAttribute('src');
+      return;
+    }
+    imageEl.setAttribute('data-base-src', baseSrc);
+    imageEl.setAttribute('src', buildNoCacheUrl(baseSrc, token || Date.now()));
+  }
+  function normalizeRadioUrl(url) {
+    return String(url || '').trim().replace(/\/+$/, '').toLowerCase();
+  }
+
+  function isManagedRadioUrl(url) {
+    var safeUrl = normalizeRadioUrl(url);
+    return safeUrl === normalizeRadioUrl(DEFAULT_RADIO_STREAM_URL) || safeUrl === normalizeRadioUrl(VOZ_DO_BRASIL_STREAM_URL);
+  }
+
+  function radioUrlsMatch(a, b) {
+    var urlA = normalizeRadioUrl(a);
+    var urlB = normalizeRadioUrl(b);
+    if (!urlA || !urlB) return false;
+    if (urlA === urlB) return true;
+    return isManagedRadioUrl(urlA) && isManagedRadioUrl(urlB);
+  }
+
+  function getClockWidgetForRuntime() {
+    return document.querySelector('[data-time-api-url], [data-timezone], [data-programs-src]') || document.body;
+  }
+
+  function currentRuntimeClockContext() {
+    var widget = getClockWidgetForRuntime();
+    primeClockForWidget(widget);
+    return currentClockContext(widget);
+  }
+
+  function isVoiceOfBrazilWindow(clock) {
+    var ctx = clock || currentRuntimeClockContext();
+    if (!ctx || typeof ctx.minutes !== 'number') return false;
+    return ctx.minutes >= (19 * 60) && ctx.minutes <= ((19 * 60) + 59);
+  }
+
+  function resolveManagedRadioUrl(clock) {
+    return isVoiceOfBrazilWindow(clock) ? VOZ_DO_BRASIL_STREAM_URL : DEFAULT_RADIO_STREAM_URL;
+  }
+
+  function resolvePreferredRadioUrl(host) {
+    var explicitUrl = host && host.getAttribute ? String(host.getAttribute('data-radio-url') || '').trim() : '';
+    if (!explicitUrl) explicitUrl = DEFAULT_RADIO_STREAM_URL;
+    if (!isManagedRadioUrl(explicitUrl)) return explicitUrl;
+    return resolveManagedRadioUrl();
+  }
+
+
   function parseScheduleItemsFromWidgetFallback(widget) {
     var raw = widget.getAttribute('data-schedule-items') || '';
     if (raw) {
@@ -188,14 +254,18 @@
     return [];
   }
 
-  function loadProgramsForWidget(widget) {
+  function loadProgramsForWidget(widget, options) {
     var url = getProgramsSourceUrl(widget);
     if (!url) return Promise.resolve(parseScheduleItemsFromWidgetFallback(widget));
     if (!PROGRAMS_SOURCE_CACHE[url]) PROGRAMS_SOURCE_CACHE[url] = { items: null, promise: null };
     var cache = PROGRAMS_SOURCE_CACHE[url];
-    if (cache.items && cache.items.length) return Promise.resolve(cache.items);
+    var forceFresh = !!(options && options.forceFresh);
+    if (!forceFresh && cache.items && cache.items.length) return Promise.resolve(cache.items);
     if (cache.promise) return cache.promise;
-    cache.promise = fetch(url, { cache: 'no-cache' }).then(function (res) {
+    cache.promise = fetch(buildNoCacheUrl(url, Date.now()), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+    }).then(function (res) {
       if (!res.ok) throw new Error('Falha ao carregar programação');
       return res.json();
     }).then(function (data) {
@@ -432,14 +502,22 @@
     }
   }
 
+  function detachSource(engine) {
+    if (!engine || !engine.audio) return;
+    destroyHls(engine);
+    try { engine.audio.pause(); } catch (_error) {}
+    try { engine.audio.removeAttribute('src'); } catch (_error) {}
+    try { engine.audio.src = ''; } catch (_error) {}
+    try { engine.audio.load(); } catch (_error) {}
+    engine.lastUrl = '';
+  }
+
   function attachSource(engine, url) {
     var safeUrl = String(url || '').trim();
     if (!engine || !safeUrl) return Promise.resolve(engine);
     if (engine.lastUrl === safeUrl) return Promise.resolve(engine);
+    detachSource(engine);
     engine.lastUrl = safeUrl;
-    destroyHls(engine);
-    try { engine.audio.pause(); } catch (_error) {}
-    try { engine.audio.removeAttribute('src'); engine.audio.load(); } catch (_error) {}
 
     if (isHlsUrl(safeUrl)) {
       return ensureHlsLoaded().then(function (Hls) {
@@ -517,7 +595,7 @@
       engine.onStateChange = function () { syncAll(); };
       engine.audio.volume = Math.max(0, Math.min(1, Number(player.getAttribute('data-volume') || 1)));
       engines.set(id, engine);
-      var url = player.getAttribute('data-radio-url') || '';
+      var url = resolvePreferredRadioUrl(player);
       attachSource(engine, url);
       ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
         audio.addEventListener(eventName, function () {
@@ -566,7 +644,7 @@
         for (var i = 0; i < actualPlayers.length; i += 1) {
           var playerHost = actualPlayers[i];
           var playerUrl = String(playerHost.getAttribute('data-radio-url') || '').trim();
-          if (playerUrl && playerUrl === ownUrl) {
+          if (playerUrl && (playerUrl === ownUrl || radioUrlsMatch(playerUrl, ownUrl))) {
             return engines.get(playerHost.getAttribute('data-id')) || null;
           }
         }
@@ -608,7 +686,7 @@
       if (host.getAttribute('data-linked-player-id')) return host.getAttribute('data-linked-player-id') === engine.id;
       if (host.classList.contains('re-type-vinyl') && !host.getAttribute('data-linked-player-id') && actualPlayers.length === 1) return engine.id === actualPlayers[0].getAttribute('data-id');
       if (host.getAttribute('data-runtime-player-id')) return host.getAttribute('data-runtime-player-id') === engine.id;
-      if (host.getAttribute('data-radio-url') && engine.lastUrl === host.getAttribute('data-radio-url')) return true;
+      if (host.getAttribute('data-radio-url') && radioUrlsMatch(engine.lastUrl, host.getAttribute('data-radio-url'))) return true;
       var firstPlayer = actualPlayers[0];
       return !!firstPlayer && engine.id === firstPlayer.getAttribute('data-id');
     }
@@ -643,6 +721,57 @@
       if (slider) updateSliderAppearance(slider);
     }
 
+    function switchEngineStream(engine, desiredUrl) {
+      var safeUrl = String(desiredUrl || '').trim();
+      if (!engine || !safeUrl) return;
+      if (normalizeRadioUrl(engine.lastUrl) === normalizeRadioUrl(safeUrl)) return;
+      var shouldResume = !!engine.wantPlay;
+      var volume = Number(engine.audio.volume || engine.defaultVolume || 1);
+      var muted = !!engine.audio.muted;
+      engine.waitingForAudio = shouldResume;
+      engine.audioDetected = false;
+      clearAudioDetection(engine);
+      attachSource(engine, safeUrl).then(function () {
+        engine.audio.volume = Math.max(0, Math.min(1, volume));
+        engine.audio.muted = muted;
+        if (!shouldResume) {
+          notifyEngineState(engine);
+          return;
+        }
+        ensureAudioAnalyser(engine);
+        notifyEngineState(engine);
+        resumeAudioContext(engine).then(function () {
+          var playPromise = engine.audio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(function () {
+              engine.wantPlay = false;
+              engine.waitingForAudio = false;
+              engine.audioDetected = false;
+              clearAudioDetection(engine);
+              notifyEngineState(engine);
+            });
+          }
+          startAudioDetection(engine);
+          setTimeout(syncAll, 20);
+          setTimeout(syncAll, 180);
+          setTimeout(syncAll, 600);
+        });
+      });
+    }
+
+    function syncManagedStreams() {
+      engines.forEach(function (engine) {
+        var host = engine.hostNode || null;
+        var baseUrl = host && host.getAttribute ? String(host.getAttribute('data-radio-url') || '').trim() : '';
+        if (!isManagedRadioUrl(baseUrl) && !isManagedRadioUrl(engine.lastUrl)) return;
+        var desiredUrl = resolvePreferredRadioUrl(host || document.body);
+        if (!desiredUrl) return;
+        if (!radioUrlsMatch(engine.lastUrl, desiredUrl) || normalizeRadioUrl(engine.lastUrl) !== normalizeRadioUrl(desiredUrl)) {
+          switchEngineStream(engine, desiredUrl);
+        }
+      });
+    }
+
     function syncAll() {
       engines.forEach(function (engine) {
         controls.forEach(function (host) {
@@ -657,7 +786,7 @@
       engine.waitingForAudio = false;
       engine.audioDetected = false;
       clearAudioDetection(engine);
-      try { engine.audio.pause(); } catch (_error) {}
+      detachSource(engine);
       try { if (Number.isFinite(engine.audio.currentTime)) engine.audio.currentTime = 0; } catch (_error) {}
       notifyEngineState(engine);
     }
@@ -666,11 +795,10 @@
       var engine = engineFromControl(control);
       if (!engine) return;
       var url = '';
-      if (engine.hostNode) url = engine.hostNode.getAttribute('data-radio-url') || '';
-      if (!url && control) {
-        var host = control.classList.contains('re-element') ? control : control.closest('.re-element');
-        url = host ? (host.getAttribute('data-radio-url') || '') : '';
-      }
+      var controlHost = control && (control.classList.contains('re-element') ? control : control.closest('.re-element'));
+      if (engine.hostNode) url = resolvePreferredRadioUrl(engine.hostNode);
+      if (!url && controlHost) url = resolvePreferredRadioUrl(controlHost);
+      if (!url) url = resolveManagedRadioUrl();
       if (shouldPlay) {
         engine.wantPlay = true;
         engine.waitingForAudio = true;
@@ -728,7 +856,7 @@
         var host = btn.closest('.re-element') || btn.parentElement;
         var engine = engineFromControl(host);
         if (!engine) return;
-        setPlayState(host, engine.audio.paused || engine.audio.ended);
+        setPlayState(host, !engine.wantPlay);
       });
     });
     Array.prototype.slice.call(document.querySelectorAll('.re-mute-btn')).forEach(function (btn) {
@@ -742,6 +870,8 @@
       });
     });
 
+    syncManagedStreams();
+    setInterval(syncManagedStreams, 1000);
     syncAll();
 
     Array.prototype.slice.call(document.querySelectorAll('.re-type-player .re-audio')).forEach(function (audio) {
@@ -836,10 +966,114 @@
     }
   }
 
+
+  function bindFooterCopyrightTheme() {
+    var footer = document.querySelector('.re-footer-copyright');
+    if (!footer) return;
+
+    function parsePx(value) {
+      var n = parseFloat(String(value || '').replace('px', '').trim());
+      return isFinite(n) ? n : 0;
+    }
+
+    function readInlineMetric(el, prop) {
+      if (!el) return 0;
+      return parsePx(el.style && el.style[prop] ? el.style[prop] : '');
+    }
+
+    function findStripBehindFooter() {
+      var footerTop = readInlineMetric(footer, 'top');
+      var footerLeft = readInlineMetric(footer, 'left');
+      var footerWidth = readInlineMetric(footer, 'width');
+      var candidates = Array.prototype.slice.call(document.querySelectorAll('.re-type-shape'));
+      var best = null;
+      var bestScore = Infinity;
+
+      candidates.forEach(function (shape) {
+        var top = readInlineMetric(shape, 'top');
+        var left = readInlineMetric(shape, 'left');
+        var width = readInlineMetric(shape, 'width');
+        var height = readInlineMetric(shape, 'height');
+        if (!width || !height) return;
+        if (height > 50) return;
+        if (Math.abs(top - footerTop) > 18) return;
+        if (width < Math.max(footerWidth, 400)) return;
+        var score = Math.abs(top - footerTop) + Math.abs(left - footerLeft);
+        if (score < bestScore) {
+          bestScore = score;
+          best = shape;
+        }
+      });
+
+      return best;
+    }
+
+    function applyFooterTheme() {
+      var root = document.documentElement;
+      var body = document.body;
+      var isDark = root.classList.contains('re-dark-theme') || body.classList.contains('re-dark-theme');
+      var strip = findStripBehindFooter();
+      if (strip) {
+        strip.style.display = 'none';
+        strip.setAttribute('aria-hidden', 'true');
+      }
+
+      var left = strip ? readInlineMetric(strip, 'left') : readInlineMetric(footer, 'left');
+      var top = strip ? readInlineMetric(strip, 'top') : readInlineMetric(footer, 'top');
+      var width = strip ? readInlineMetric(strip, 'width') : readInlineMetric(footer, 'width');
+      var height = strip ? readInlineMetric(strip, 'height') : Math.max(32, readInlineMetric(footer, 'height'));
+      if (width > 0) footer.style.width = width + 'px';
+      if (height > 0) footer.style.height = height + 'px';
+      if (left > 0) footer.style.left = left + 'px';
+      footer.style.top = top + 'px';
+      footer.style.background = isDark ? '#000000' : '#ffffff';
+      footer.style.color = isDark ? '#ffffff' : '#000000';
+      footer.style.opacity = '1';
+      footer.style.borderRadius = '9px';
+      footer.style.display = 'flex';
+      footer.style.alignItems = 'center';
+      footer.style.justifyContent = 'center';
+      footer.style.textAlign = 'center';
+      footer.style.padding = '0 16px';
+      footer.style.boxSizing = 'border-box';
+      footer.style.zIndex = '29';
+      footer.style.lineHeight = '1.1';
+      footer.style.fontSize = '22px';
+      footer.style.fontWeight = '500';
+
+      var inner = footer.querySelector('.re-text-inner');
+      if (inner) {
+        inner.style.width = '100%';
+        inner.style.margin = '0';
+        inner.style.color = isDark ? '#ffffff' : '#000000';
+        inner.style.background = 'transparent';
+        inner.style.textAlign = 'center';
+        inner.style.lineHeight = '1.1';
+      }
+    }
+
+    applyFooterTheme();
+    window.addEventListener('resize', applyFooterTheme, { passive: true });
+  }
+
   function bindThemeToggles() {
     var root = document.documentElement;
     var body = document.body;
     var stage = document.getElementById('page-stage');
+
+    function readStoredTheme() {
+      try { return localStorage.getItem(THEME_STORAGE_KEY) || ''; } catch (_error) { return ''; }
+    }
+
+    function persistTheme(isDark) {
+      try { localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light'); } catch (_error) {}
+    }
+
+    function applyTheme(isDark) {
+      root.classList.toggle('re-dark-theme', !!isDark);
+      body.classList.toggle('re-dark-theme', !!isDark);
+    }
+
     function sync() {
       var isDark = root.classList.contains('re-dark-theme') || body.classList.contains('re-dark-theme');
       Array.prototype.slice.call(document.querySelectorAll('.re-theme-toggle-btn')).forEach(function (btn) {
@@ -849,14 +1083,20 @@
         box.classList.toggle('is-dark', isDark);
       });
       if (stage) stage.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      bindFooterCopyrightTheme();
     }
+
+    applyTheme(readStoredTheme() === 'dark');
+
     Array.prototype.slice.call(document.querySelectorAll('.re-theme-toggle-btn')).forEach(function (btn) {
       btn.addEventListener('click', function () {
-        root.classList.toggle('re-dark-theme');
-        body.classList.toggle('re-dark-theme');
+        var nextIsDark = !(root.classList.contains('re-dark-theme') || body.classList.contains('re-dark-theme'));
+        applyTheme(nextIsDark);
+        persistTheme(nextIsDark);
         sync();
       });
     });
+
     sync();
   }
 
@@ -1042,10 +1282,10 @@
     var vinylWidgets = Array.prototype.slice.call(document.querySelectorAll('.re-type-vinyl'));
     var allWidgets = fullWidgets.concat(photoWidgets, vinylWidgets);
 
-    function ensureWidgetPrograms(widget) {
-      if (widget.__reScheduleItems && widget.__reScheduleItems.length) return Promise.resolve(widget.__reScheduleItems);
-      if (widget.__reScheduleItemsPromise) return widget.__reScheduleItemsPromise;
-      widget.__reScheduleItemsPromise = loadProgramsForWidget(widget).then(function (items) {
+    function ensureWidgetPrograms(widget, forceFresh) {
+      if (!forceFresh && widget.__reScheduleItems && widget.__reScheduleItems.length) return Promise.resolve(widget.__reScheduleItems);
+      if (!forceFresh && widget.__reScheduleItemsPromise) return widget.__reScheduleItemsPromise;
+      widget.__reScheduleItemsPromise = loadProgramsForWidget(widget, { forceFresh: !!forceFresh }).then(function (items) {
         widget.__reScheduleItems = items;
         widget.__reScheduleItemsPromise = null;
         return items;
@@ -1087,7 +1327,7 @@
       if (timeEl) timeEl.textContent = (current.start || '') + ' às ' + (current.end || '');
       if (imageEl) {
         if (current.image) {
-          imageEl.src = current.image;
+          setFreshImageSource(imageEl, current.image, now && now.isoLocal ? now.isoLocal : Date.now());
           imageEl.style.display = '';
           imageEl.style.transform = 'translate(' + Number(current.photoX || 0) + 'px, ' + Number(current.photoY || 0) + 'px) scale(' + Math.max(0.1, Number(current.photoZoom || 1)) + ')';
         } else {
@@ -1105,7 +1345,7 @@
         imageEl.style.display = 'none';
         return;
       }
-      imageEl.src = current.image;
+      setFreshImageSource(imageEl, current.image, now && now.isoLocal ? now.isoLocal : Date.now());
       imageEl.style.display = '';
     }
 
@@ -1115,24 +1355,109 @@
       var imageEl = widget.querySelector('.re-vinyl-image');
       if (!imageEl) return;
       var src = current && current.vinyl ? current.vinyl : DEFAULT_VINYL_PATH;
-      if (imageEl.getAttribute('src') !== src) imageEl.setAttribute('src', src);
+      setFreshImageSource(imageEl, src, now && now.isoLocal ? now.isoLocal : Date.now());
       imageEl.style.display = '';
     }
 
-    function refreshSchedules() {
+    function renderWidget(widget, items) {
+      if (fullWidgets.indexOf(widget) !== -1) renderFullWidget(widget, items || []);
+      if (photoWidgets.indexOf(widget) !== -1) renderPhotoWidget(widget, items || []);
+      if (vinylWidgets.indexOf(widget) !== -1) renderVinylWidget(widget, items || []);
+    }
+
+    function renderFromCache() {
       allWidgets.forEach(function (widget) {
         primeClockForWidget(widget);
-        ensureWidgetPrograms(widget).then(function (items) {
-          if (fullWidgets.indexOf(widget) !== -1) renderFullWidget(widget, items || []);
-          if (photoWidgets.indexOf(widget) !== -1) renderPhotoWidget(widget, items || []);
-          if (vinylWidgets.indexOf(widget) !== -1) renderVinylWidget(widget, items || []);
+        var items = widget.__reScheduleItems;
+        if (!items || !items.length) items = parseScheduleItemsFromWidgetFallback(widget);
+        renderWidget(widget, items || []);
+      });
+    }
+
+    function refreshFromSource() {
+      allWidgets.forEach(function (widget) {
+        primeClockForWidget(widget);
+        ensureWidgetPrograms(widget, true).then(function (items) {
+          renderWidget(widget, items || []);
+        }, function () {
+          renderWidget(widget, parseScheduleItemsFromWidgetFallback(widget));
         });
       });
     }
 
     if (!allWidgets.length) return;
-    refreshSchedules();
-    setInterval(refreshSchedules, 60 * 1000);
+
+    allWidgets.forEach(function (widget) { primeClockForWidget(widget); });
+    refreshFromSource();
+    renderFromCache();
+
+    var lastRenderKey = '';
+    var lastSourceRefreshAt = 0;
+
+    function tick() {
+      var clock = currentRuntimeClockContext();
+      var renderKey = clock && clock.isoLocal ? clock.isoLocal : String(Date.now());
+      if (renderKey !== lastRenderKey) {
+        lastRenderKey = renderKey;
+        renderFromCache();
+      }
+      if (!lastSourceRefreshAt || (Date.now() - lastSourceRefreshAt) >= 30000) {
+        lastSourceRefreshAt = Date.now();
+        refreshFromSource();
+      }
+    }
+
+    setInterval(tick, 1000);
+  }
+
+
+  function bindMapPollWidget() {
+    var slot = document.querySelector('.re-map-poll-slot');
+    if (!slot) return;
+    var image = slot.querySelector('.re-map-poll-image');
+    var frame = slot.querySelector('.re-map-poll-frame');
+    if (!image || !frame) return;
+
+    var STATE_URL = 'https://jovial-chaja-1bae9e.netlify.app/.netlify/functions/state-public';
+    var WIDGET_URL = 'https://jovial-chaja-1bae9e.netlify.app/widget.html';
+    var CHECK_INTERVAL = 15 * 60 * 1000;
+    var lastMode = '';
+
+    function applyMode(mode) {
+      var safeMode = String(mode || 'map').toLowerCase();
+      var showWidget = safeMode === 'poll' || safeMode === 'result';
+      if (showWidget) {
+        slot.classList.add('is-poll-active');
+        if (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
+          frame.setAttribute('src', WIDGET_URL);
+        }
+      } else {
+        slot.classList.remove('is-poll-active');
+        if (frame.getAttribute('src') && frame.getAttribute('src') !== 'about:blank') {
+          frame.setAttribute('src', 'about:blank');
+        }
+      }
+      lastMode = safeMode;
+    }
+
+    function checkState() {
+      fetch(STATE_URL, {
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' }
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Falha ao consultar enquete');
+        return res.json();
+      }).then(function (data) {
+        var mode = data && data.mode ? data.mode : (data && data.state && data.state.mode ? data.state.mode : 'map');
+        applyMode(mode);
+      }).catch(function () {
+        if (!lastMode) applyMode('map');
+      });
+    }
+
+    applyMode('map');
+    checkState();
+    setInterval(checkState, CHECK_INTERVAL);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -1143,5 +1468,6 @@
     bindWeatherWidgets();
     bindImageLoops();
     bindSchedules();
+    bindMapPollWidget();
   });
 })();

@@ -434,3 +434,32 @@ html.re-dark-theme .re-theme-icon-moon, body.re-dark-theme .re-theme-icon-moon, 
 .re-map-poll-slot .re-map-poll-frame { background:#305fbd; display:none; }
 .re-map-poll-slot.is-poll-active .re-map-poll-image { display:none; }
 .re-map-poll-slot.is-poll-active .re-map-poll-frame { display:block; }
+
+
+.re-footer-copyright {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  background:rgba(255,255,255,0.96) !important;
+  color:#000000 !important;
+  border-radius:14px !important;
+  box-shadow:0 10px 26px rgba(15,23,42,0.10);
+  overflow:visible;
+  text-align:center;
+}
+.re-footer-copyright .re-text-inner {
+  width:100%;
+  text-align:center;
+  color:inherit;
+  background:transparent;
+  padding:10px 18px;
+  border-radius:inherit;
+  line-height:1.2;
+}
+html.re-dark-theme .re-footer-copyright,
+body.re-dark-theme .re-footer-copyright {
+  background:rgba(0,0,0,0.96) !important;
+  color:#ffffff !important;
+  box-shadow:0 10px 26px rgba(0,0,0,0.32);
+}
