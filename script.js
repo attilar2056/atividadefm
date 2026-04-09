@@ -109,19 +109,21 @@
   function buildClockContextFromIso(isoText, elapsedMs) {
     var parts = parseLocalIsoParts(isoText);
     if (!parts) return null;
-    var date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, 0, 0));
-    if (Number(elapsedMs) > 0) date = new Date(date.getTime() + Number(elapsedMs));
+    var basePseudoUtcMs = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, 0, 0);
+    var elapsed = Number(elapsedMs);
+    var date = new Date(basePseudoUtcMs + (Number.isFinite(elapsed) ? elapsed : 0));
     return {
       year: date.getUTCFullYear(),
       month: date.getUTCMonth() + 1,
       day: date.getUTCDate(),
       weekday: WEEKDAY_ORDER[date.getUTCDay()],
       minutes: (date.getUTCHours() * 60) + date.getUTCMinutes(),
-      isoLocal: date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()) + 'T' + pad2(date.getUTCHours()) + ':' + pad2(date.getUTCMinutes())
+      isoLocal: date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()) + 'T' + pad2(date.getUTCHours()) + ':' + pad2(date.getUTCMinutes()),
+      pseudoUtcMs: basePseudoUtcMs + (Number.isFinite(elapsed) ? elapsed : 0)
     };
   }
 
-  function fallbackClockContext(timeZone) {
+  function fallbackClockContext(timeZone, offsetMs) {
     var formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: timeZone || 'America/Sao_Paulo',
       year: 'numeric',
@@ -132,20 +134,27 @@
       minute: '2-digit',
       hour12: false
     });
-    var parts = formatter.formatToParts(new Date());
+    var shiftedNow = new Date(Date.now() + (Number(offsetMs) || 0));
+    var parts = formatter.formatToParts(shiftedNow);
     var map = {};
     parts.forEach(function (part) {
       if (part && part.type) map[part.type] = part.value;
     });
     var weekdayMap = { sun: 'dom', mon: 'seg', tue: 'ter', wed: 'quar', thu: 'qui', fri: 'sex', sat: 'sab' };
     var weekday = weekdayMap[String(map.weekday || '').toLowerCase()] || 'seg';
+    var year = Number(map.year || 0);
+    var month = Number(map.month || 0);
+    var day = Number(map.day || 0);
+    var hour = Number(map.hour || 0);
+    var minute = Number(map.minute || 0);
     return {
-      year: Number(map.year || 0),
-      month: Number(map.month || 0),
-      day: Number(map.day || 0),
+      year: year,
+      month: month,
+      day: day,
       weekday: weekday,
-      minutes: (Number(map.hour || 0) * 60) + Number(map.minute || 0),
-      isoLocal: String(map.year || '0000') + '-' + String(map.month || '00') + '-' + String(map.day || '00') + 'T' + String(map.hour || '00') + ':' + String(map.minute || '00')
+      minutes: (hour * 60) + minute,
+      isoLocal: String(map.year || '0000') + '-' + String(map.month || '00') + '-' + String(map.day || '00') + 'T' + String(map.hour || '00') + ':' + String(map.minute || '00'),
+      pseudoUtcMs: Date.UTC(year, Math.max(0, month - 1), day, hour, minute, 0, 0)
     };
   }
 
@@ -291,22 +300,28 @@
   function primeClockForWidget(widget) {
     var url = getTimeApiUrl(widget);
     if (!url) return;
-    if (!TIME_SOURCE_CACHE[url]) TIME_SOURCE_CACHE[url] = { baseIso: '', syncedAt: 0, promise: null };
+    if (!TIME_SOURCE_CACHE[url]) TIME_SOURCE_CACHE[url] = { offsetMs: 0, syncedAt: 0, promise: null, lastApiIso: '' };
     var cache = TIME_SOURCE_CACHE[url];
-    var refreshMs = 15 * 60 * 1000;
-    var isFresh = cache.baseIso && (Date.now() - cache.syncedAt) < refreshMs;
+    var timeZone = getTimezoneForWidget(widget);
+    var refreshMs = 5 * 60 * 1000;
+    var isFresh = cache.syncedAt && (Date.now() - cache.syncedAt) < refreshMs;
     if (isFresh || cache.promise) return;
-    cache.promise = fetch(url, { cache: 'no-cache' }).then(function (res) {
+    cache.promise = fetch(buildNoCacheUrl(url, Date.now()), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+    }).then(function (res) {
       if (!res.ok) throw new Error('Falha ao sincronizar hora');
       return res.json();
     }).then(function (data) {
-      var ctx = readClockContextFromApiPayload(data);
-      if (ctx && ctx.isoLocal) {
-        cache.baseIso = ctx.isoLocal;
+      var apiCtx = readClockContextFromApiPayload(data);
+      var browserCtx = fallbackClockContext(timeZone, 0);
+      if (apiCtx && apiCtx.isoLocal && browserCtx && Number.isFinite(apiCtx.pseudoUtcMs) && Number.isFinite(browserCtx.pseudoUtcMs)) {
+        cache.lastApiIso = apiCtx.isoLocal;
+        cache.offsetMs = apiCtx.pseudoUtcMs - browserCtx.pseudoUtcMs;
         cache.syncedAt = Date.now();
       }
       cache.promise = null;
-      return ctx;
+      return apiCtx;
     }, function () {
       cache.promise = null;
       return null;
@@ -317,11 +332,8 @@
     var url = getTimeApiUrl(widget);
     var timeZone = getTimezoneForWidget(widget);
     var cache = TIME_SOURCE_CACHE[url];
-    if (cache && cache.baseIso) {
-      var fromApi = buildClockContextFromIso(cache.baseIso, Date.now() - cache.syncedAt);
-      if (fromApi) return fromApi;
-    }
-    return fallbackClockContext(timeZone);
+    var offsetMs = cache && Number.isFinite(cache.offsetMs) ? cache.offsetMs : 0;
+    return fallbackClockContext(timeZone, offsetMs);
   }
 
   function currentMinutesForTimezone(timeZone) {
@@ -1401,7 +1413,7 @@
         lastRenderKey = renderKey;
         renderFromCache();
       }
-      if (!lastSourceRefreshAt || (Date.now() - lastSourceRefreshAt) >= 30000) {
+      if (!lastSourceRefreshAt || (Date.now() - lastSourceRefreshAt) >= 10000) {
         lastSourceRefreshAt = Date.now();
         refreshFromSource();
       }
