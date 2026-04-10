@@ -9,8 +9,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/2.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -21,12 +21,12 @@
     {
       "id": "programa_seg_180_359",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 4",
-      "locutor": "auto 4",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "03:00",
       "end": "05:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -42,7 +42,7 @@
       "start": "06:00",
       "end": "06:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -52,13 +52,13 @@
     },
     {
       "id": "programa_seg_420_539",
-      "title": "Manhã de sucessos",
+      "title": "Sucessos da manhã",
       "host": "Dani Vox",
       "locutor": "Dani Vox",
       "start": "07:00",
       "end": "08:59",
       "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/3.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -74,7 +74,7 @@
       "start": "09:00",
       "end": "10:59",
       "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/4.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -85,12 +85,12 @@
     {
       "id": "programa_seg_660_779",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 1",
-      "locutor": "Auto 1",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "11:00",
       "end": "12:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -100,13 +100,13 @@
     },
     {
       "id": "programa_seg_780_959",
-      "title": "Top Hits",
+      "title": "Top Hits 1º Edição",
       "host": "Alex Alves",
       "locutor": "Alex Alves",
       "start": "13:00",
       "end": "15:59",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/5.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -116,13 +116,13 @@
     },
     {
       "id": "programa_seg_960_1079",
-      "title": "Top Hits – Segunda Edição",
+      "title": "Top Hits 2º Edição",
       "host": "Atila Ribeiro",
       "locutor": "Atila Ribeiro",
       "start": "16:00",
       "end": "17:59",
       "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/6.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -138,7 +138,7 @@
       "start": "18:00",
       "end": "18:59",
       "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/7.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -153,8 +153,8 @@
       "locutor": "Radio Braz",
       "start": "19:00",
       "end": "19:59",
-      "image": "assets/uploads/1775613876039_1775234080144_A_Voz_do_Brasil_103_1_FM_1.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg",
+      "vinyl": "assets/uploads/8.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -165,12 +165,12 @@
     {
       "id": "programa_seg_1200_1259",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 2",
-      "locutor": "Auto 2",
+      "host": "Radio Braz",
+      "locutor": "Radio Braz",
       "start": "20:00",
       "end": "20:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -181,12 +181,12 @@
     {
       "id": "programa_seg_1260_1319",
       "title": "Momento de Reflexão",
-      "host": "Edinaldo Silva.",
-      "locutor": "Edinaldo Silva.",
+      "host": "Edinaldo Silva",
+      "locutor": "Edinaldo Silva",
       "start": "21:00",
       "end": "21:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -197,12 +197,12 @@
     {
       "id": "programa_seg_1320_1439",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 3",
-      "locutor": "auto 3",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "22:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "seg"
       ],
@@ -217,8 +217,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/2.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -229,12 +229,12 @@
     {
       "id": "programa_ter_180_359",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 4",
-      "locutor": "auto 4",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "03:00",
       "end": "05:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -250,7 +250,7 @@
       "start": "06:00",
       "end": "06:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -260,13 +260,13 @@
     },
     {
       "id": "programa_ter_420_539",
-      "title": "Manhã de sucessos",
+      "title": "Sucessos da manhã",
       "host": "Dani Vox",
       "locutor": "Dani Vox",
       "start": "07:00",
       "end": "08:59",
       "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/3.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -282,7 +282,7 @@
       "start": "09:00",
       "end": "10:59",
       "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/4.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -293,12 +293,12 @@
     {
       "id": "programa_ter_660_779",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 1",
-      "locutor": "Auto 1",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "11:00",
       "end": "12:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -308,13 +308,13 @@
     },
     {
       "id": "programa_ter_780_959",
-      "title": "Top Hits",
+      "title": "Top Hits 1º Edição",
       "host": "Alex Alves",
       "locutor": "Alex Alves",
       "start": "13:00",
       "end": "15:59",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/5.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -324,13 +324,13 @@
     },
     {
       "id": "programa_ter_960_1079",
-      "title": "Top Hits – Segunda Edição",
+      "title": "Top Hits 2º Edição",
       "host": "Atila Ribeiro",
       "locutor": "Atila Ribeiro",
       "start": "16:00",
       "end": "17:59",
       "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/6.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -346,7 +346,7 @@
       "start": "18:00",
       "end": "18:59",
       "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/7.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -361,8 +361,8 @@
       "locutor": "Radio Braz",
       "start": "19:00",
       "end": "19:59",
-      "image": "assets/uploads/1775613876039_1775234080144_A_Voz_do_Brasil_103_1_FM_1.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg",
+      "vinyl": "assets/uploads/8.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -373,12 +373,12 @@
     {
       "id": "programa_ter_1200_1259",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 2",
-      "locutor": "Auto 2",
+      "host": "Radio Braz",
+      "locutor": "Radio Braz",
       "start": "20:00",
       "end": "20:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -389,12 +389,12 @@
     {
       "id": "programa_ter_1260_1319",
       "title": "Momento de Reflexão",
-      "host": "Edinaldo Silva.",
-      "locutor": "Edinaldo Silva.",
+      "host": "Edinaldo Silva",
+      "locutor": "Edinaldo Silva",
       "start": "21:00",
       "end": "21:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -405,12 +405,12 @@
     {
       "id": "programa_ter_1320_1439",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 3",
-      "locutor": "auto 3",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "22:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "ter"
       ],
@@ -425,8 +425,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/2.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -437,12 +437,12 @@
     {
       "id": "programa_quar_180_359",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 4",
-      "locutor": "auto 4",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "03:00",
       "end": "05:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -458,7 +458,7 @@
       "start": "06:00",
       "end": "06:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -468,13 +468,13 @@
     },
     {
       "id": "programa_quar_420_539",
-      "title": "Manhã de sucessos",
+      "title": "Sucessos da manhã",
       "host": "Dani Vox",
       "locutor": "Dani Vox",
       "start": "07:00",
       "end": "08:59",
       "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/3.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -490,7 +490,7 @@
       "start": "09:00",
       "end": "10:59",
       "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/4.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -501,12 +501,12 @@
     {
       "id": "programa_quar_660_779",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 1",
-      "locutor": "Auto 1",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "11:00",
       "end": "12:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -516,13 +516,13 @@
     },
     {
       "id": "programa_quar_780_959",
-      "title": "Top Hits",
+      "title": "Top Hits 1º Edição",
       "host": "Alex Alves",
       "locutor": "Alex Alves",
       "start": "13:00",
       "end": "15:59",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/5.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -532,13 +532,13 @@
     },
     {
       "id": "programa_quar_960_1079",
-      "title": "Top Hits – Segunda Edição",
+      "title": "Top Hits 2º Edição",
       "host": "Atila Ribeiro",
       "locutor": "Atila Ribeiro",
       "start": "16:00",
       "end": "17:59",
       "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/6.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -554,7 +554,7 @@
       "start": "18:00",
       "end": "18:59",
       "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/7.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -569,8 +569,8 @@
       "locutor": "Radio Braz",
       "start": "19:00",
       "end": "19:59",
-      "image": "assets/uploads/1775613876039_1775234080144_A_Voz_do_Brasil_103_1_FM_1.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg",
+      "vinyl": "assets/uploads/8.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -581,12 +581,12 @@
     {
       "id": "programa_quar_1200_1259",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 2",
-      "locutor": "Auto 2",
+      "host": "Radio Braz",
+      "locutor": "Radio Braz",
       "start": "20:00",
       "end": "20:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -597,12 +597,12 @@
     {
       "id": "programa_quar_1260_1319",
       "title": "Momento de Reflexão",
-      "host": "Edinaldo Silva.",
-      "locutor": "Edinaldo Silva.",
+      "host": "Edinaldo Silva",
+      "locutor": "Edinaldo Silva",
       "start": "21:00",
       "end": "21:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -613,12 +613,12 @@
     {
       "id": "programa_quar_1320_1439",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 3",
-      "locutor": "auto 3",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "22:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "quar"
       ],
@@ -633,8 +633,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/2.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -645,12 +645,12 @@
     {
       "id": "programa_qui_180_359",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 4",
-      "locutor": "auto 4",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "03:00",
       "end": "05:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -666,7 +666,7 @@
       "start": "06:00",
       "end": "06:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -676,13 +676,13 @@
     },
     {
       "id": "programa_qui_420_539",
-      "title": "Manhã de sucessos",
+      "title": "Sucessos da manhã",
       "host": "Dani Vox",
       "locutor": "Dani Vox",
       "start": "07:00",
       "end": "08:59",
       "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/3.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -698,7 +698,7 @@
       "start": "09:00",
       "end": "10:59",
       "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/4.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -709,12 +709,12 @@
     {
       "id": "programa_qui_660_779",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 1",
-      "locutor": "Auto 1",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "11:00",
       "end": "12:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -724,13 +724,13 @@
     },
     {
       "id": "programa_qui_780_959",
-      "title": "Top Hits",
+      "title": "Top Hits 1º Edição",
       "host": "Alex Alves",
       "locutor": "Alex Alves",
       "start": "13:00",
       "end": "15:59",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/5.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -740,13 +740,13 @@
     },
     {
       "id": "programa_qui_960_1079",
-      "title": "Top Hits – Segunda Edição",
+      "title": "Top Hits 2º Edição",
       "host": "Atila Ribeiro",
       "locutor": "Atila Ribeiro",
       "start": "16:00",
       "end": "17:59",
       "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/6.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -762,7 +762,7 @@
       "start": "18:00",
       "end": "18:59",
       "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/7.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -777,8 +777,8 @@
       "locutor": "Radio Braz",
       "start": "19:00",
       "end": "19:59",
-      "image": "assets/uploads/1775613876039_1775234080144_A_Voz_do_Brasil_103_1_FM_1.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg",
+      "vinyl": "assets/uploads/8.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -789,12 +789,12 @@
     {
       "id": "programa_qui_1200_1259",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 2",
-      "locutor": "Auto 2",
+      "host": "Radio Braz",
+      "locutor": "Radio Braz",
       "start": "20:00",
       "end": "20:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "assets/uploads/9.png",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -805,12 +805,12 @@
     {
       "id": "programa_qui_1260_1319",
       "title": "Momento de Reflexão",
-      "host": "Edinaldo Silva.",
-      "locutor": "Edinaldo Silva.",
+      "host": "Edinaldo Silva",
+      "locutor": "Edinaldo Silva",
       "start": "21:00",
       "end": "21:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -821,12 +821,12 @@
     {
       "id": "programa_qui_1320_1439",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 3",
-      "locutor": "auto 3",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "22:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "qui"
       ],
@@ -841,8 +841,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/2.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -853,12 +853,12 @@
     {
       "id": "programa_sex_180_359",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 4",
-      "locutor": "auto 4",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "03:00",
       "end": "05:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -874,7 +874,7 @@
       "start": "06:00",
       "end": "06:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -884,13 +884,13 @@
     },
     {
       "id": "programa_sex_420_539",
-      "title": "Manhã de sucessos",
+      "title": "Sucessos da manhã",
       "host": "Dani Vox",
       "locutor": "Dani Vox",
       "start": "07:00",
       "end": "08:59",
       "image": "assets/uploads/1749201837465_d2a7c8f1-6b44-4c92-8e33-7a1d9f5b2c60.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/3.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -906,7 +906,7 @@
       "start": "09:00",
       "end": "10:59",
       "image": "assets/uploads/1775232752792_cd301624-7b3d-4932-93da-180988352593.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/4.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -917,12 +917,12 @@
     {
       "id": "programa_sex_660_779",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 1",
-      "locutor": "Auto 1",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "11:00",
       "end": "12:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -932,13 +932,13 @@
     },
     {
       "id": "programa_sex_780_959",
-      "title": "Top Hits",
+      "title": "Top Hits 1º Edição",
       "host": "Alex Alves",
       "locutor": "Alex Alves",
       "start": "13:00",
       "end": "15:59",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/5.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -948,13 +948,13 @@
     },
     {
       "id": "programa_sex_960_1079",
-      "title": "Top Hits – Segunda Edição",
+      "title": "Top Hits 2º Edição",
       "host": "Atila Ribeiro",
       "locutor": "Atila Ribeiro",
       "start": "16:00",
       "end": "17:59",
       "image": "assets/uploads/1775232937043_4b9c87ce-7e24-4b5d-9aa2-1dabffed4d45.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/6.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -970,7 +970,7 @@
       "start": "18:00",
       "end": "18:59",
       "image": "assets/uploads/1775233373943_b43da311-7e0f-4535-96b0-03c77096e50d.jpg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/7.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -985,8 +985,8 @@
       "locutor": "Radio Braz",
       "start": "19:00",
       "end": "19:59",
-      "image": "assets/uploads/1775613876039_1775234080144_A_Voz_do_Brasil_103_1_FM_1.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg",
+      "vinyl": "assets/uploads/8.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -997,12 +997,12 @@
     {
       "id": "programa_sex_1200_1259",
       "title": "1 Hora Só de Músicas",
-      "host": "Auto 2",
-      "locutor": "Auto 2",
+      "host": "Radio Braz",
+      "locutor": "Radio Braz",
       "start": "20:00",
       "end": "20:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -1013,12 +1013,12 @@
     {
       "id": "programa_sex_1260_1319",
       "title": "Momento de Reflexão",
-      "host": "Edinaldo Silva.",
-      "locutor": "Edinaldo Silva.",
+      "host": "Edinaldo Silva",
+      "locutor": "Edinaldo Silva",
       "start": "21:00",
       "end": "21:59",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg",
-      "vinyl": "",
+      "vinyl": "assets/uploads/9.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -1029,12 +1029,12 @@
     {
       "id": "programa_sex_1320_1439",
       "title": "1 Hora Só de Músicas",
-      "host": "auto 3",
-      "locutor": "auto 3",
+      "host": "Auto",
+      "locutor": "Auto",
       "start": "22:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "sex"
       ],
@@ -1049,8 +1049,8 @@
       "locutor": "Caio Martins",
       "start": "00:00",
       "end": "02:59",
-      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
+      "vinyl": "assets/uploads/1775615555560_Insonia_no_ar_com_Caio_Martins.jpg",
       "diaDaSemana": [
         "sab"
       ],
@@ -1065,8 +1065,8 @@
       "locutor": "auto 4",
       "start": "03:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "sab"
       ],
@@ -1081,8 +1081,8 @@
       "locutor": "auto 4",
       "start": "00:00",
       "end": "23:59",
-      "image": "assets/uploads/1775612900196_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.png",
-      "vinyl": "",
+      "image": "assets/uploads/1775812992576_1775233909947_Uma_hora_de_m_sica_na_Atividade_FM.jpg",
+      "vinyl": "assets/uploads/10.png",
       "diaDaSemana": [
         "dom"
       ],
