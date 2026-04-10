@@ -87,8 +87,122 @@
   var TIME_SOURCE_CACHE = Object.create(null);
   var PAGE_BOOT_CACHE_BUSTER = String(Date.now());
   var THEME_STORAGE_KEY = 'radioatividade-theme';
+  var VOLUME_STORAGE_KEY = 'radioatividade-volume';
+
+  function readStoredVolume(defaultValue) {
+    try {
+      var raw = localStorage.getItem(VOLUME_STORAGE_KEY);
+      if (raw === null || raw === '') return Number(defaultValue || 1);
+      var parsed = Number(raw);
+      if (!Number.isFinite(parsed)) return Number(defaultValue || 1);
+      return Math.max(0, Math.min(1, parsed));
+    } catch (_error) {
+      return Number(defaultValue || 1);
+    }
+  }
+
+  function persistVolume(value) {
+    try {
+      var normalized = Math.max(0, Math.min(1, Number(value || 0)));
+      localStorage.setItem(VOLUME_STORAGE_KEY, String(normalized));
+    } catch (_error) {}
+  }
   var DEFAULT_RADIO_STREAM_URL = 'https://stream.zeno.fm/zh7jkchfce4uv';
   var VOZ_DO_BRASIL_STREAM_URL = 'http://radioaovivo.senado.gov.br/canal2.mp3';
+  var AUTO_DJ_RETRY_INTERVAL_MS = 60 * 1000;
+  var AUTO_DJ_STREAM_TIMEOUT_MS = 12 * 1000;
+  var RADIO_SILENCE_TIMEOUT_MS = 30 * 1000;
+  var AUTO_DJ_PLAYLIST = [
+
+            // 12 originais do Romantic
+            { id: "1", title: "Crash Boom Bang", artist: "Roxette", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/05.%20Roxette%20-%20Crash%20Boom%20Bang.mp3" },
+            { id: "2", title: "Come Undone", artist: "Duran Duran", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/06.%20Duran%20Duran%20-%20Come%20Undone.mp3" },
+            { id: "3", title: "Another Day In Paradise", artist: "Phil Collins", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/08.%20Phil%20Colins%20-%20Another%20Day%20In%20Paradise.mp3" },
+            { id: "4", title: "Take my breath away", artist: "Berlin", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/09.%20Berlin%20-%20Take%20my%20breath%20away.mp3" },
+            { id: "5", title: "Time After Time", artist: "Cyndi Lauper", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/36.%20Kuschelrock%203%20(CD%201)%20-%2004%20-%20Cyndi%20Lauper%20-%20Time%20After%20Time.mp3" },
+            { id: "6", title: "Simply the Best", artist: "Tina Turner", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/33.%20Tina%20Turner%20-%20Simply%20the%20Best.mp3" },
+            { id: "7", title: "Hello", artist: "Lionel Richie", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/41.%20Lionel%20Richie%20-%20Hello.mp3" },
+            { id: "8", title: "Please forgive me", artist: "Bryan Adams", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/42.%20Bryan%20Adams%20-%20Please%20forgive%20me.mp3" },
+            { id: "9", title: "Flash Dance... What A Feeling", artist: "Irene Cara", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/51.%20Irene%20Cara%20-%20Flash%20Dance...%20What%20A%20Feeling.mp3" },
+            { id: "10", title: "Because You Loved Me", artist: "Celine Dion", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/61.%20Celine%20Dion%20-%20Because%20You%20Loved%20Me.mp3" },
+            { id: "11", title: "(I Just) Died In Your Arms Tonight", artist: "Cutting Crew", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/62.%20Cutting%20Crew%20-%20(I%20Just)%20Died%20In%20Your%20Arms%20Tonight.mp3" },
+            { id: "12", title: "I Want To Know What Love Is", artist: "Foreigner", url: "http://84.54.191.178:5555/Music/Lobby/Romantic/65.%20Foreigner%20-%20I%20Want%20To%20Know%20What%20Love%20Is.mp3" },
+            
+            // 73 do Gold
+            { id: "13", title: "Movin' On Up", artist: "M People", url: "http://84.54.191.178:5555/Music/Lobby/Gold/01.%20M%20People%20-%20Movin'%20On%20Up.mp3" },
+            { id: "14", title: "Billy Jean", artist: "Michael Jackson", url: "http://84.54.191.178:5555/Music/Lobby/Gold/02.%20Michael%20Jackson%20-%20Billy%20Jean,%201982.mp3" },
+            { id: "15", title: "Ring My Bell", artist: "Anita Ward", url: "http://84.54.191.178:5555/Music/Lobby/Gold/03.%20anita%20ward%20-%20ring%20my%20bell.mp3" },
+            { id: "16", title: "Too Many Broken Hearts", artist: "Jason Donovan", url: "http://84.54.191.178:5555/Music/Lobby/Gold/04.%20Jason%20Donovan%20-Too%20Many%20Broken%20Hearts.mp3" },
+            { id: "17", title: "Notorious", artist: "Duran Duran", url: "http://84.54.191.178:5555/Music/Lobby/Gold/05.%20Notorious%20-%20Duran%20Duran.mp3" },
+            { id: "18", title: "Hope Of Deliverance", artist: "Paul McCartney", url: "http://84.54.191.178:5555/Music/Lobby/Gold/06.%20Paul%20McCartney%20-%20Hope%20Of%20Deliverance.MP3" },
+            { id: "19", title: "Losing My Religion", artist: "R.E.M.", url: "http://84.54.191.178:5555/Music/Lobby/Gold/07.%20rem%20-%20losing%20my%20religion.mp3" },
+            { id: "20", title: "Pretty Woman", artist: "Roy Orbison", url: "http://84.54.191.178:5555/Music/Lobby/Gold/08.%20Roy%20Orbison%20-%20Pretty%20Woman.mp3" },
+            { id: "21", title: "It's In His Kiss", artist: "Cher", url: "http://84.54.191.178:5555/Music/Lobby/Gold/09..%20SHER%20-%2014%20ITS%20IN%20HIS%20KISS.mp3" },
+            { id: "22", title: "Eye Of The Tiger", artist: "Survivor", url: "http://84.54.191.178:5555/Music/Lobby/Gold/10.%20SURVIVOR-EYE%20OF%20THE%20TIGER.mp3" },
+            { id: "23", title: "Wake Me Up Before You Go-Go", artist: "Wham!", url: "http://84.54.191.178:5555/Music/Lobby/Gold/12.%20Wake%20Me%20Up%20Before%20You%20Go%20Go%20-%20Wham.mp3" },
+            { id: "24", title: "3 A.M. Eternal", artist: "KLF", url: "http://84.54.191.178:5555/Music/Lobby/Gold/13.%20KLF%20-%203%20A.M.%20Eternal.mp3" },
+            { id: "25", title: "What Is And What Should Never Be", artist: "Led Zeppelin", url: "http://84.54.191.178:5555/Music/Lobby/Gold/14.%20Led%20Zeppelin%20-%20What%20Is%20And%20What%20Should%20Never%20Be.MP3" },
+            { id: "26", title: "To Be With You", artist: "Mr. Big", url: "http://84.54.191.178:5555/Music/Lobby/Gold/15.%20Mr.%20Big%20-%2011%20To%20Be%20With%20You.mp3" },
+            { id: "27", title: "La Isla Bonita", artist: "Madonna", url: "http://84.54.191.178:5555/Music/Lobby/Gold/16.%20Madonna%20-%20La%20Isla%20Bonita.mp3" },
+            { id: "28", title: "Tarzan Boy", artist: "Baltimora", url: "http://84.54.191.178:5555/Music/Lobby/Gold/18.%20Baltimora%20-%20Tarzan%20Boy.mp3" },
+            { id: "29", title: "Sollsbury Hill", artist: "Peter Gabriel", url: "http://84.54.191.178:5555/Music/Lobby/Gold/19.%20Peter%20Gabriel%20-%20Sollsbury%20Hill.mp3" },
+            { id: "30", title: "Walk Like An Egyptian", artist: "Bangles", url: "http://84.54.191.178:5555/Music/Lobby/Gold/20.%20Bangles%20-%20Walk%20Like%20An%20Egyptian.mp3" },
+            { id: "31", title: "Song For Denise", artist: "Piano Fantasia", url: "http://84.54.191.178:5555/Music/Lobby/Gold/21.%20Piano%20Fantasia%20-%20Song%20For%20Denise.mp3" },
+            { id: "32", title: "I Want To Break Free", artist: "Queen", url: "http://84.54.191.178:5555/Music/Lobby/Gold/22.%20Queen%20-%20I%20Want%20To%20Break%20Free.mp3" },
+            { id: "33", title: "Oh Carol", artist: "Smokie", url: "http://84.54.191.178:5555/Music/Lobby/Gold/23.%20Smokie%20-%20Oh%20Carol.mp3" },
+            { id: "34", title: "Over My Shoulder", artist: "Mike & The Mechanic", url: "http://84.54.191.178:5555/Music/Lobby/Gold/24.%20Mike%20%26%20The%20Mechanic%20-%20Over%20My%20Shoulder.mp3" },
+            { id: "35", title: "Shy Guy", artist: "Diana King", url: "http://84.54.191.178:5555/Music/Lobby/Gold/25.%20Diana%20King%20-%20Shy%20Guy.mp3" },
+            { id: "36", title: "Hit the Road Jack", artist: "Charles", url: "http://84.54.191.178:5555/Music/Lobby/Gold/26.%20Charles%20-%20Hit%20the%20road%20jack.mp3" },
+            { id: "37", title: "Trackin'", artist: "Billy Crawford", url: "http://84.54.191.178:5555/Music/Lobby/Gold/28.%20Billy%20Crawford%20-01-%20Trackin'.mp3" },
+            { id: "38", title: "Living Next Door To Alice", artist: "Smokie", url: "http://84.54.191.178:5555/Music/Lobby/Gold/29.%20Smokie%20-%20Living%20Next%20Door%20To%20Alice.mp3" },
+            { id: "39", title: "Believe", artist: "Cher", url: "http://84.54.191.178:5555/Music/Lobby/Gold/31.%20Cher%20-%20Believe.mp3" },
+            { id: "40", title: "You're So Vain", artist: "Carly Simon", url: "http://84.54.191.178:5555/Music/Lobby/Gold/32.%20carly_simon-youre_so_vain-rep.mp3" },
+            { id: "41", title: "Easy Lover", artist: "Phil Collins", url: "http://84.54.191.178:5555/Music/Lobby/Gold/33.%20Phil%20Collins%20-%20Easy%20Lover.mp3" },
+            { id: "42", title: "Speedy Gonzales", artist: "Pat Boone", url: "http://84.54.191.178:5555/Music/Lobby/Gold/35.%20Pat%20Boone%20-%20Speedy%20Gonzales.mp3" },
+            { id: "43", title: "Oh! Carol", artist: "Neil Sedaka", url: "http://84.54.191.178:5555/Music/Lobby/Gold/36.%20Neil%20Sedaka%20-%20Oh!%20Carol.mp3" },
+            { id: "44", title: "A Little Respect", artist: "Erasure", url: "http://84.54.191.178:5555/Music/Lobby/Gold/37.%20Erasure%20-%20A%20Little%20Respect.mp3" },
+            { id: "45", title: "Karma Chameleon", artist: "Culture Club", url: "http://84.54.191.178:5555/Music/Lobby/Gold/38.%20Karma%20Chameleon%20-%20Culture%20Club.mp3" },
+            { id: "46", title: "Babe I'm Gonna Leave You", artist: "Led Zeppelin", url: "http://84.54.191.178:5555/Music/Lobby/Gold/39.%20Led%20Zeppelin%20-%20Babe%20I'm%20Gonna%20Leave%20You.MP3" },
+            { id: "47", title: "I Would Do Anything For Love", artist: "Meatloaf", url: "http://84.54.191.178:5555/Music/Lobby/Gold/40.%20Meatloaf%201%20-%20I%20Would%20Do%20Anything%20For%20Love.mp3" },
+            { id: "48", title: "The Gambler", artist: "Kenny Rogers", url: "http://84.54.191.178:5555/Music/Lobby/Gold/41.%20Kenny%20Rogers%20-%20The%20Gambler.mp3" },
+            { id: "49", title: "I Feel Good", artist: "James Brown", url: "http://84.54.191.178:5555/Music/Lobby/Gold/42.%20James%20Brown%20-%20I%20Feel%20Good.MP3" },
+            { id: "50", title: "Stop That Train", artist: "Clint Eastwood and General Saint", url: "http://84.54.191.178:5555/Music/Lobby/Gold/43.%20Clint%20Eastwood%20and%20General%20Saint%20-%20Stop%20that%20train.mp3" },
+            { id: "51", title: "Free Your Mind", artist: "En Vogue", url: "http://84.54.191.178:5555/Music/Lobby/Gold/45.%20En%20Vogue%20-%20Free%20Your%20Mind.mp3" },
+            { id: "52", title: "We Will Rock You", artist: "Queen", url: "http://84.54.191.178:5555/Music/Lobby/Gold/46.%20Queen%20-%20We%20will%20rock%20you.mp3" },
+            { id: "53", title: "Do You Want to Hurt Me", artist: "Culture Club", url: "http://84.54.191.178:5555/Music/Lobby/Gold/47.%20Culture%20Club%20-%20Do%20You%20Want%20to%20Hurt%20Me.mp3" },
+            { id: "54", title: "Baby Come Back", artist: "Pato Banton", url: "http://84.54.191.178:5555/Music/Lobby/Gold/48.%20Pato%20Banton%20-%20Baby%20Come%20Back.mp3" },
+            { id: "55", title: "Justified & Ancient", artist: "KLF", url: "http://84.54.191.178:5555/Music/Lobby/Gold/49.%20KLF%20-%20Justified%20%26%20Ancient.mp3" },
+            { id: "56", title: "I Will Survive", artist: "Diana Ross", url: "http://84.54.191.178:5555/Music/Lobby/Gold/50.%20Diana%20Ross%20-%20I%20Will%20Survive.mp3" },
+            { id: "57", title: "Walk Of Life", artist: "Dire Straits", url: "http://84.54.191.178:5555/Music/Lobby/Gold/51.%20DIRE%20STRAITS%20-%20WALK%20OF%20LIFE.MP3" },
+            { id: "58", title: "Things Can Only Get Better", artist: "Dream", url: "http://84.54.191.178:5555/Music/Lobby/Gold/52.%20Dream%20-%20Things%20Can%20Only%20Get%20Better.mp3" },
+            { id: "59", title: "You're The One That I Want", artist: "John Travolta", url: "http://84.54.191.178:5555/Music/Lobby/Gold/53.%20John%20Travolta%20,%20You're%20The%20One%20That%20I%20Want%20-%20Diverse.mp3" },
+            { id: "60", title: "I Can't Stand The Rain", artist: "Tina Turner", url: "http://84.54.191.178:5555/Music/Lobby/Gold/54.%20Tina%20Turner%20-%20I%20Can't%20Stand%20The%20Rain.MP3" },
+            { id: "61", title: "Vive Les Vegas", artist: "Elvis Presley", url: "http://84.54.191.178:5555/Music/Lobby/Gold/55.%20Elvis%20Presley%20-%20Vive%20Les%20Vagas.mp3" },
+            { id: "62", title: "Anybody Seen My Baby", artist: "The Rolling Stones", url: "http://84.54.191.178:5555/Music/Lobby/Gold/56.%20The%20Rolling%20Stones%20-%20Anybody%20Seen%20My%20Baby.mp3" },
+            { id: "63", title: "Ghostbusters", artist: "Ray Parker Jr.", url: "http://84.54.191.178:5555/Music/Lobby/Gold/57.%20Ray%20Parker%20Junnior%20-%20GhostBusters.mp3" },
+            { id: "64", title: "I Wanna Be The Only One", artist: "Eternal Feat. BeBe Winans", url: "http://84.54.191.178:5555/Music/Lobby/Gold/58.%20Eternal%20Feat.%20BeBe%20Winans%20-%20I%20Wanna%20Be%20The%20Only%20One.mp3" },
+            { id: "65", title: "The Final Countdown", artist: "Europe", url: "http://84.54.191.178:5555/Music/Lobby/Gold/59.%20Europe%20-%20The%20Final%20Coundown.mp3" },
+            { id: "66", title: "Do Wah Diddy Diddy", artist: "Manfred Mann", url: "http://84.54.191.178:5555/Music/Lobby/Gold/60.%20Manfred%20Mann%20-%20Do%20Wah%20Diddy%20Diddy.mp3" },
+            { id: "67", title: "She Drove Me Crazy", artist: "Fine Young Cannibals", url: "http://84.54.191.178:5555/Music/Lobby/Gold/62.%20Fine%20Young%20Canibals%20-%20She%20Drve...mp3" },
+            { id: "68", title: "Marina", artist: "Rocco Granata", url: "http://84.54.191.178:5555/Music/Lobby/Gold/63.%20Rocco%20Granata%20-%20Marina.mp3" },
+            { id: "69", title: "Sweets For My Sweet", artist: "The Searchers", url: "http://84.54.191.178:5555/Music/Lobby/Gold/64.%20The%20Searchers%20-%20Sweets%20For%20My%20Sweet.mp3" },
+            { id: "70", title: "Just the Summer Time", artist: "Mungojerry", url: "http://84.54.191.178:5555/Music/Lobby/Gold/65.%20Mungojerry%20-%20Just%20the%20summer%20time.mp3" },
+            { id: "71", title: "YMCA", artist: "Village People", url: "http://84.54.191.178:5555/Music/Lobby/Gold/67.%20Villiage%20People%20-%20YMCA.mp3" },
+            { id: "72", title: "Playing With The Boys", artist: "Top Gun", url: "http://84.54.191.178:5555/Music/Lobby/Gold/68.%20Top%20Gun%20-%2016%20-%20Playing%20With%20The%20Boys.mp3" },
+            { id: "73", title: "I Will Survive", artist: "Hermes House Band", url: "http://84.54.191.178:5555/Music/Lobby/Gold/69.%20Hermes%20House%20Band%20-%20I%20Will%20Survive.mp3" },
+            { id: "74", title: "I Will Survive", artist: "Gloria Gaynor", url: "http://84.54.191.178:5555/Music/Lobby/Gold/70.%20Gloria%20Gaynor%20-%20I%20Will%20Survive.mp3" },
+            { id: "75", title: "Rumors", artist: "Timex Social Club", url: "http://84.54.191.178:5555/Music/Lobby/Gold/71.%20Timex%20Social%20Club%20-%20Rumors%20(Ultimix)%20-%20110%20bpm.mp3" },
+            { id: "76", title: "Fame", artist: "Irene Cara", url: "http://84.54.191.178:5555/Music/Lobby/Gold/72.%20Irene%20Cara%20-%20Fame.mp3" },
+            { id: "77", title: "Ooh La La", artist: "Wiseguys", url: "http://84.54.191.178:5555/Music/Lobby/Gold/73.%20Wiseguys%20-%20Ooh%20La%20La.mp3" },
+            { id: "78", title: "Movin' On Up", artist: "M People", url: "http://84.54.191.178:5555/Music/Lobby/Gold/01.%20M%20People%20-%20Movin'%20On%20Up.mp3" },
+            { id: "79", title: "Billy Jean", artist: "Michael Jackson", url: "http://84.54.191.178:5555/Music/Lobby/Gold/02.%20Michael%20Jackson%20-%20Billy%20Jean,%201982.mp3" },
+            { id: "80", title: "Ring My Bell", artist: "Anita Ward", url: "http://84.54.191.178:5555/Music/Lobby/Gold/03.%20anita%20ward%20-%20ring%20my%20bell.mp3" },
+            { id: "81", title: "Too Many Broken Hearts", artist: "Jason Donovan", url: "http://84.54.191.178:5555/Music/Lobby/Gold/04.%20Jason%20Donovan%20-Too%20Many%20Broken%20Hearts.mp3" },
+            { id: "82", title: "Notorious", artist: "Duran Duran", url: "http://84.54.191.178:5555/Music/Lobby/Gold/05.%20Notorious%20-%20Duran%20Duran.mp3" },
+            { id: "83", title: "Hope Of Deliverance", artist: "Paul McCartney", url: "http://84.54.191.178:5555/Music/Lobby/Gold/06.%20Paul%20McCartney%20-%20Hope%20Of%20Deliverance.MP3" },
+            { id: "84", title: "Losing My Religion", artist: "R.E.M.", url: "http://84.54.191.178:5555/Music/Lobby/Gold/07.%20rem%20-%20losing%20my%20religion.mp3" },
+            { id: "85", title: "Pretty Woman", artist: "Roy Orbison", url: "http://84.54.191.178:5555/Music/Lobby/Gold/08.%20Roy%20Orbison%20-%20Pretty%20Woman.mp3" }
+  ];
 
   function pad2(value) {
     return String(Math.max(0, Number(value) || 0)).padStart(2, '0');
@@ -203,9 +317,26 @@
     return String(url || '').trim().replace(/\/+$/, '').toLowerCase();
   }
 
-  function isManagedRadioUrl(url) {
+  function getConfiguredDefaultRadioStreamUrl(host) {
+    var normalizedFallback = normalizeRadioUrl(DEFAULT_RADIO_STREAM_URL);
+    var nodes = [];
+    if (host) nodes.push(host);
+    nodes.push(document.querySelector('.re-type-player[data-radio-url]'));
+    nodes.push(document.querySelector('[data-radio-url]'));
+    for (var i = 0; i < nodes.length; i += 1) {
+      var node = nodes[i];
+      if (!node || !node.getAttribute) continue;
+      var explicitUrl = normalizeRadioUrl(node.getAttribute('data-radio-url') || '');
+      if (!explicitUrl || explicitUrl === normalizeRadioUrl(VOZ_DO_BRASIL_STREAM_URL)) continue;
+      return explicitUrl;
+    }
+    return normalizedFallback;
+  }
+
+  function isManagedRadioUrl(url, host) {
     var safeUrl = normalizeRadioUrl(url);
-    return safeUrl === normalizeRadioUrl(DEFAULT_RADIO_STREAM_URL) || safeUrl === normalizeRadioUrl(VOZ_DO_BRASIL_STREAM_URL);
+    if (!safeUrl) return false;
+    return safeUrl === getConfiguredDefaultRadioStreamUrl(host) || safeUrl === normalizeRadioUrl(VOZ_DO_BRASIL_STREAM_URL);
   }
 
   function radioUrlsMatch(a, b) {
@@ -226,21 +357,28 @@
     return currentClockContext(widget);
   }
 
+  function isVoiceOfBrazilWeekday(clock) {
+    var ctx = clock || currentRuntimeClockContext();
+    if (!ctx) return false;
+    return ctx.weekday === 'seg' || ctx.weekday === 'ter' || ctx.weekday === 'quar' || ctx.weekday === 'qui' || ctx.weekday === 'sex';
+  }
+
   function isVoiceOfBrazilWindow(clock) {
     var ctx = clock || currentRuntimeClockContext();
     if (!ctx || typeof ctx.minutes !== 'number') return false;
+    if (!isVoiceOfBrazilWeekday(ctx)) return false;
     return ctx.minutes >= (19 * 60) && ctx.minutes <= ((19 * 60) + 59);
   }
 
-  function resolveManagedRadioUrl(clock) {
-    return isVoiceOfBrazilWindow(clock) ? VOZ_DO_BRASIL_STREAM_URL : DEFAULT_RADIO_STREAM_URL;
+  function resolveManagedRadioUrl(clock, host) {
+    return isVoiceOfBrazilWindow(clock) ? VOZ_DO_BRASIL_STREAM_URL : getConfiguredDefaultRadioStreamUrl(host);
   }
 
   function resolvePreferredRadioUrl(host) {
     var explicitUrl = host && host.getAttribute ? String(host.getAttribute('data-radio-url') || '').trim() : '';
-    if (!explicitUrl) explicitUrl = DEFAULT_RADIO_STREAM_URL;
-    if (!isManagedRadioUrl(explicitUrl)) return explicitUrl;
-    return resolveManagedRadioUrl();
+    if (!explicitUrl) explicitUrl = getConfiguredDefaultRadioStreamUrl(host);
+    if (!isManagedRadioUrl(explicitUrl, host)) return explicitUrl;
+    return resolveManagedRadioUrl(null, host);
   }
 
 
@@ -266,14 +404,16 @@
   function loadProgramsForWidget(widget, options) {
     var url = getProgramsSourceUrl(widget);
     if (!url) return Promise.resolve(parseScheduleItemsFromWidgetFallback(widget));
+    if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
+      return Promise.resolve(parseScheduleItemsFromWidgetFallback(widget));
+    }
     if (!PROGRAMS_SOURCE_CACHE[url]) PROGRAMS_SOURCE_CACHE[url] = { items: null, promise: null };
     var cache = PROGRAMS_SOURCE_CACHE[url];
     var forceFresh = !!(options && options.forceFresh);
     if (!forceFresh && cache.items && cache.items.length) return Promise.resolve(cache.items);
     if (cache.promise) return cache.promise;
     cache.promise = fetch(buildNoCacheUrl(url, Date.now()), {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      cache: 'no-store'
     }).then(function (res) {
       if (!res.ok) throw new Error('Falha ao carregar programação');
       return res.json();
@@ -300,6 +440,7 @@
   function primeClockForWidget(widget) {
     var url = getTimeApiUrl(widget);
     if (!url) return;
+    if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') return;
     if (!TIME_SOURCE_CACHE[url]) TIME_SOURCE_CACHE[url] = { offsetMs: 0, syncedAt: 0, promise: null, lastApiIso: '' };
     var cache = TIME_SOURCE_CACHE[url];
     var timeZone = getTimezoneForWidget(widget);
@@ -307,8 +448,7 @@
     var isFresh = cache.syncedAt && (Date.now() - cache.syncedAt) < refreshMs;
     if (isFresh || cache.promise) return;
     cache.promise = fetch(buildNoCacheUrl(url, Date.now()), {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      cache: 'no-store'
     }).then(function (res) {
       if (!res.ok) throw new Error('Falha ao sincronizar hora');
       return res.json();
@@ -377,7 +517,7 @@
   }
 
   function createEngine(id, audio, hostNode) {
-    audio.preload = 'auto';
+    audio.preload = 'none';
     try { audio.setAttribute('playsinline', ''); } catch (_error) {}
     try { audio.crossOrigin = 'anonymous'; } catch (_error) {}
     return {
@@ -397,7 +537,18 @@
       timeData: null,
       detectInterval: null,
       detectStartedAt: 0,
-      analyserUnavailable: false
+      silenceStartedAt: 0,
+      lastAudibleAt: 0,
+      analyserUnavailable: false,
+      isAutoDjActive: false,
+      autoDjTrackIndex: -1,
+      autoDjRetryTimer: null,
+      autoDjProbeAudio: null,
+      autoDjProbeTimeout: null,
+      autoDjRetryInFlight: false,
+      autoDjFallbackReason: '',
+      currentTrackMeta: null,
+      onStreamTimeout: null
     };
   }
 
@@ -474,37 +625,67 @@
     if (!engine) return;
     clearAudioDetection(engine);
     engine.detectStartedAt = Date.now();
+    engine.silenceStartedAt = 0;
     engine.waitingForAudio = !engine.audioDetected;
     engine.detectInterval = setInterval(function () {
       if (!engine.wantPlay) {
         clearAudioDetection(engine);
         return;
       }
-      if (!engine.audio || engine.audio.paused || engine.audio.ended) return;
-      if (engine.audioDetected) {
-        engine.waitingForAudio = false;
-        clearAudioDetection(engine);
-        notifyEngineState(engine);
-        return;
-      }
+      if (!engine.audio || engine.audio.ended) return;
       if (engine.audio.muted || Number(engine.audio.volume || 0) <= 0) {
         engine.waitingForAudio = false;
+        engine.silenceStartedAt = 0;
         notifyEngineState(engine);
         return;
       }
 
-      var detected = measureAudioPresence(engine);
+      var detected = false;
+      if (!engine.audio.paused) detected = measureAudioPresence(engine);
+
       if (detected) {
         engine.audioDetected = true;
+        engine.lastAudibleAt = Date.now();
+        engine.silenceStartedAt = 0;
         engine.waitingForAudio = false;
-        clearAudioDetection(engine);
         notifyEngineState(engine);
         return;
       }
 
-      engine.waitingForAudio = true;
+      if (!engine.audioDetected) {
+        if (!engine.isAutoDjActive && engine.wantPlay && engine.detectStartedAt && (Date.now() - engine.detectStartedAt) >= AUTO_DJ_STREAM_TIMEOUT_MS) {
+          clearAudioDetection(engine);
+          if (typeof engine.onStreamTimeout === 'function') {
+            engine.onStreamTimeout('timeout');
+            return;
+          }
+        }
+
+        engine.waitingForAudio = true;
+        notifyEngineState(engine);
+        return;
+      }
+
+      if (!engine.isAutoDjActive && isManagedRadioUrl(engine.lastUrl, engine.hostNode || document.body)) {
+        if (!engine.silenceStartedAt) engine.silenceStartedAt = Date.now();
+        engine.waitingForAudio = true;
+        notifyEngineState(engine);
+        if ((Date.now() - engine.silenceStartedAt) >= RADIO_SILENCE_TIMEOUT_MS) {
+          clearAudioDetection(engine);
+          engine.audioDetected = false;
+          engine.silenceStartedAt = 0;
+          if (typeof engine.onStreamTimeout === 'function') {
+            engine.onStreamTimeout('silent-timeout');
+            return;
+          }
+        }
+        return;
+      }
+
+      engine.waitingForAudio = false;
+      engine.silenceStartedAt = 0;
       notifyEngineState(engine);
-    }, 120);
+    }, 250);
   }
 
   function destroyHls(engine) {
@@ -605,23 +786,34 @@
       var id = player.getAttribute('data-id');
       var engine = createEngine(id, audio, player);
       engine.onStateChange = function () { syncAll(); };
-      engine.audio.volume = Math.max(0, Math.min(1, Number(player.getAttribute('data-volume') || 1)));
+      engine.onStreamTimeout = function () { handleManagedStreamFailure(engine, 'timeout'); };
+      var initialVolume = readStoredVolume(Number(player.getAttribute('data-volume') || 1));
+      engine.audio.volume = Math.max(0, Math.min(1, initialVolume));
       engines.set(id, engine);
       var url = resolvePreferredRadioUrl(player);
       attachSource(engine, url);
       ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
         audio.addEventListener(eventName, function () {
+          if (eventName === 'volumechange') {
+            persistVolume(audio.volume);
+          }
           if (eventName === 'pause' || eventName === 'ended') {
             if (!engine.wantPlay) {
               engine.waitingForAudio = false;
               engine.audioDetected = false;
+              engine.silenceStartedAt = 0;
             }
+          }
+          if (eventName === 'ended' && engine.isAutoDjActive && engine.wantPlay) {
+            playAutoDjTrack(engine, engine.autoDjTrackIndex + 1);
+            return;
           }
           if (eventName === 'waiting' && engine.wantPlay && !engine.audioDetected && !audio.muted && Number(audio.volume || 0) > 0) {
             engine.waitingForAudio = true;
           }
           if (eventName === 'playing' && engine.wantPlay && !engine.audioDetected && !audio.muted && Number(audio.volume || 0) > 0) {
             engine.waitingForAudio = true;
+            engine.silenceStartedAt = 0;
             startAudioDetection(engine);
           }
           if (eventName === 'volumechange' && (audio.muted || Number(audio.volume || 0) <= 0) && !engine.audioDetected) {
@@ -629,19 +821,212 @@
           }
           if (eventName === 'volumechange' && !audio.muted && Number(audio.volume || 0) > 0 && engine.wantPlay && !engine.audioDetected) {
             engine.waitingForAudio = true;
+            engine.silenceStartedAt = 0;
             startAudioDetection(engine);
           }
           notifyEngineState(engine);
         });
       });
       audio.addEventListener('error', function () {
-        engine.wantPlay = false;
-        engine.waitingForAudio = false;
-        engine.audioDetected = false;
-        clearAudioDetection(engine);
-        notifyEngineState(engine);
+        if (engine.isAutoDjActive && engine.wantPlay) {
+          playAutoDjTrack(engine, engine.autoDjTrackIndex + 1);
+          return;
+        }
+        handleManagedStreamFailure(engine, 'error');
       });
     });
+
+
+    function shouldAllowAutoDjForEngine(engine) {
+      if (!engine || !engine.wantPlay) return false;
+      var host = engine.hostNode || null;
+      var explicitUrl = host && host.getAttribute ? String(host.getAttribute('data-radio-url') || '').trim() : '';
+      if (explicitUrl && !isManagedRadioUrl(explicitUrl, host || document.body)) return false;
+      var desiredUrl = resolvePreferredRadioUrl(host || document.body);
+      return normalizeRadioUrl(desiredUrl) === getConfiguredDefaultRadioStreamUrl(host || document.body);
+    }
+
+    function cleanupAutoDjProbe(engine) {
+      if (!engine || !engine.autoDjProbeAudio) return;
+      var probe = engine.autoDjProbeAudio;
+      engine.autoDjProbeAudio = null;
+      try { probe.pause(); } catch (_error) {}
+      try { probe.removeAttribute('src'); } catch (_error) {}
+      try { probe.src = ''; } catch (_error) {}
+      try { probe.load(); } catch (_error) {}
+    }
+
+    function clearAutoDjRetry(engine) {
+      if (!engine) return;
+      if (engine.autoDjRetryTimer) {
+        clearTimeout(engine.autoDjRetryTimer);
+        engine.autoDjRetryTimer = null;
+      }
+      if (engine.autoDjProbeTimeout) {
+        clearTimeout(engine.autoDjProbeTimeout);
+        engine.autoDjProbeTimeout = null;
+      }
+      engine.autoDjRetryInFlight = false;
+      cleanupAutoDjProbe(engine);
+    }
+
+    function stopAutoDjMode(engine) {
+      if (!engine) return;
+      clearAutoDjRetry(engine);
+      engine.isAutoDjActive = false;
+      engine.autoDjFallbackReason = '';
+      engine.currentTrackMeta = null;
+    }
+
+    function scheduleAutoDjRetry(engine) {
+      if (!engine || !engine.isAutoDjActive || !engine.wantPlay) return;
+      if (engine.autoDjRetryTimer) return;
+      engine.autoDjRetryTimer = setTimeout(function () {
+        engine.autoDjRetryTimer = null;
+        probeManagedStreamRecovery(engine);
+      }, AUTO_DJ_RETRY_INTERVAL_MS);
+    }
+
+    function probeManagedStreamRecovery(engine) {
+      if (!engine || !engine.isAutoDjActive || !engine.wantPlay) return;
+      if (!shouldAllowAutoDjForEngine(engine)) {
+        stopAutoDjMode(engine);
+        switchEngineStream(engine, resolvePreferredRadioUrl(engine.hostNode || document.body));
+        return;
+      }
+      if (engine.autoDjRetryInFlight) return;
+
+      var desiredUrl = resolvePreferredRadioUrl(engine.hostNode || document.body);
+      if (!desiredUrl) {
+        scheduleAutoDjRetry(engine);
+        return;
+      }
+
+      engine.autoDjRetryInFlight = true;
+      cleanupAutoDjProbe(engine);
+
+      var probe = new Audio();
+      engine.autoDjProbeAudio = probe;
+      try { probe.setAttribute('playsinline', ''); } catch (_error) {}
+      try { probe.crossOrigin = 'anonymous'; } catch (_error) {}
+      probe.muted = true;
+      probe.volume = 0;
+      probe.preload = 'none';
+      probe.src = desiredUrl;
+
+      var settled = false;
+      function finish(success) {
+        if (settled) return;
+        settled = true;
+        if (engine.autoDjProbeTimeout) {
+          clearTimeout(engine.autoDjProbeTimeout);
+          engine.autoDjProbeTimeout = null;
+        }
+        engine.autoDjRetryInFlight = false;
+        cleanupAutoDjProbe(engine);
+        if (!engine.wantPlay) return;
+        if (!success) {
+          scheduleAutoDjRetry(engine);
+          return;
+        }
+        stopAutoDjMode(engine);
+        switchEngineStream(engine, desiredUrl);
+      }
+
+      probe.addEventListener('canplay', function () { finish(true); }, { once: true });
+      probe.addEventListener('playing', function () { finish(true); }, { once: true });
+      probe.addEventListener('error', function () { finish(false); }, { once: true });
+
+      engine.autoDjProbeTimeout = setTimeout(function () {
+        finish(false);
+      }, AUTO_DJ_STREAM_TIMEOUT_MS);
+
+      try { probe.load(); } catch (_error) {}
+      try {
+        var playAttempt = probe.play();
+        if (playAttempt && typeof playAttempt.catch === 'function') {
+          playAttempt.catch(function () {});
+        }
+      } catch (_error) {}
+    }
+
+    function playAutoDjTrack(engine, nextIndex) {
+      if (!engine || !engine.wantPlay || !AUTO_DJ_PLAYLIST.length) return;
+      if (!engine.isAutoDjActive) engine.isAutoDjActive = true;
+
+      var listLength = AUTO_DJ_PLAYLIST.length;
+      var numericIndex = Number(nextIndex);
+      if (!Number.isFinite(numericIndex)) {
+        numericIndex = engine.autoDjTrackIndex >= 0 ? (engine.autoDjTrackIndex + 1) : Math.floor(Math.random() * listLength);
+      }
+      numericIndex = ((numericIndex % listLength) + listLength) % listLength;
+
+      var track = AUTO_DJ_PLAYLIST[numericIndex];
+      if (!track || !track.url) return;
+
+      var volume = Number(engine.audio.volume || engine.defaultVolume || 1);
+      var muted = !!engine.audio.muted;
+      engine.autoDjTrackIndex = numericIndex;
+      engine.currentTrackMeta = track;
+      engine.waitingForAudio = true;
+      engine.audioDetected = false;
+      engine.silenceStartedAt = 0;
+      clearAudioDetection(engine);
+
+      attachSource(engine, track.url).then(function () {
+        engine.audio.volume = Math.max(0, Math.min(1, volume));
+        engine.audio.muted = muted;
+        ensureAudioAnalyser(engine);
+        notifyEngineState(engine);
+        return resumeAudioContext(engine);
+      }).then(function () {
+        var playPromise = engine.audio.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function () {
+            setTimeout(function () {
+              if (engine.isAutoDjActive && engine.wantPlay) playAutoDjTrack(engine, engine.autoDjTrackIndex + 1);
+            }, 250);
+          });
+        }
+        startAudioDetection(engine);
+        scheduleAutoDjRetry(engine);
+        setTimeout(syncAll, 20);
+        setTimeout(syncAll, 180);
+        setTimeout(syncAll, 600);
+      });
+    }
+
+    function startAutoDjFallback(engine, reason) {
+      if (!engine || !engine.wantPlay || !AUTO_DJ_PLAYLIST.length) return;
+      if (!shouldAllowAutoDjForEngine(engine)) return;
+      if (engine.isAutoDjActive) {
+        engine.autoDjFallbackReason = String(reason || engine.autoDjFallbackReason || 'stream-error');
+        scheduleAutoDjRetry(engine);
+        notifyEngineState(engine);
+        return;
+      }
+      engine.autoDjFallbackReason = String(reason || 'stream-error');
+      engine.isAutoDjActive = true;
+      playAutoDjTrack(engine, engine.autoDjTrackIndex >= 0 ? engine.autoDjTrackIndex : Math.floor(Math.random() * AUTO_DJ_PLAYLIST.length));
+      scheduleAutoDjRetry(engine);
+      notifyEngineState(engine);
+    }
+
+    function handleManagedStreamFailure(engine, reason) {
+      if (!engine || !engine.wantPlay) return;
+      if (shouldAllowAutoDjForEngine(engine) && AUTO_DJ_PLAYLIST.length) {
+        startAutoDjFallback(engine, reason);
+        return;
+      }
+      stopAutoDjMode(engine);
+      engine.waitingForAudio = true;
+      engine.audioDetected = false;
+      engine.silenceStartedAt = 0;
+      clearAudioDetection(engine);
+      detachSource(engine);
+      engine.wantPlay = true;
+      notifyEngineState(engine);
+    }
 
     function engineFromControl(control) {
       if (!control) return actualPlayers[0] ? engines.get(actualPlayers[0].getAttribute('data-id')) : null;
@@ -685,7 +1070,7 @@
           ['play', 'pause', 'ended', 'volumechange', 'playing', 'canplay', 'canplaythrough', 'loadstart', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (eventName) {
             audio.addEventListener(eventName, function () { syncAll(); });
           });
-          audio.addEventListener('error', function () { syncAll(); });
+          audio.addEventListener('error', function () { if (!engine.isAutoDjActive && isManagedRadioUrl(engine.lastUrl)) { handleManagedStreamFailure(engine, 'error'); return; } syncAll(); });
         }
         return engines.get(runtimeId);
       }
@@ -709,19 +1094,21 @@
       var started = !!engine.wantPlay;
       var muted = !!audio && (!!audio.muted || Number(audio.volume || 0) === 0);
       var liveActive = started && !!engine.audioDetected && !!audio && !audio.paused && !audio.ended;
-      var loading = started && !liveActive && !!engine.waitingForAudio && !muted;
+      var autoDjActive = started && !!engine.isAutoDjActive;
+      var loading = started && !liveActive && !autoDjActive && !!engine.waitingForAudio && !muted;
       var volumeValue = Math.round(Math.max(0, Math.min(1, Number(audio.volume || 0))) * 100);
       host.classList.toggle('is-playing', started);
-      host.classList.toggle('is-live-active', liveActive);
+      host.classList.toggle('is-live-active', liveActive || autoDjActive);
       host.classList.toggle('is-loading', loading);
       host.classList.toggle('is-muted', muted);
+      host.classList.toggle('is-autodj', autoDjActive);
       var live = host.querySelector('.re-live-badge');
       if (live) {
         var liveText = live.querySelector('span:last-child');
-        live.hidden = !(liveActive || loading);
+        live.hidden = !(liveActive || loading || autoDjActive);
         live.classList.toggle('is-loading', loading);
-        live.classList.toggle('is-live', liveActive);
-        if (liveText) liveText.textContent = loading ? 'CARREGANDO AGUARDE' : 'AO VIVO';
+        live.classList.toggle('is-live', liveActive || autoDjActive);
+        if (liveText) liveText.textContent = autoDjActive ? 'AUTO DJ' : (loading ? 'CARREGANDO AGUARDE' : 'AO VIVO');
       }
       var muteBtn = host.querySelector('.re-mute-btn');
       if (muteBtn) {
@@ -736,12 +1123,14 @@
     function switchEngineStream(engine, desiredUrl) {
       var safeUrl = String(desiredUrl || '').trim();
       if (!engine || !safeUrl) return;
+      if (engine.isAutoDjActive && normalizeRadioUrl(safeUrl) === getConfiguredDefaultRadioStreamUrl(engine.hostNode || document.body)) stopAutoDjMode(engine);
       if (normalizeRadioUrl(engine.lastUrl) === normalizeRadioUrl(safeUrl)) return;
       var shouldResume = !!engine.wantPlay;
       var volume = Number(engine.audio.volume || engine.defaultVolume || 1);
       var muted = !!engine.audio.muted;
       engine.waitingForAudio = shouldResume;
       engine.audioDetected = false;
+      engine.silenceStartedAt = 0;
       clearAudioDetection(engine);
       attachSource(engine, safeUrl).then(function () {
         engine.audio.volume = Math.max(0, Math.min(1, volume));
@@ -756,11 +1145,7 @@
           var playPromise = engine.audio.play();
           if (playPromise && typeof playPromise.catch === 'function') {
             playPromise.catch(function () {
-              engine.wantPlay = false;
-              engine.waitingForAudio = false;
-              engine.audioDetected = false;
-              clearAudioDetection(engine);
-              notifyEngineState(engine);
+              handleManagedStreamFailure(engine, 'play-catch');
             });
           }
           startAudioDetection(engine);
@@ -775,9 +1160,20 @@
       engines.forEach(function (engine) {
         var host = engine.hostNode || null;
         var baseUrl = host && host.getAttribute ? String(host.getAttribute('data-radio-url') || '').trim() : '';
-        if (!isManagedRadioUrl(baseUrl) && !isManagedRadioUrl(engine.lastUrl)) return;
+        if (!isManagedRadioUrl(baseUrl, host || document.body) && !isManagedRadioUrl(engine.lastUrl, host || document.body)) return;
         var desiredUrl = resolvePreferredRadioUrl(host || document.body);
         if (!desiredUrl) return;
+
+        if (engine.isAutoDjActive) {
+          if (!shouldAllowAutoDjForEngine(engine)) {
+            stopAutoDjMode(engine);
+            switchEngineStream(engine, desiredUrl);
+            return;
+          }
+          scheduleAutoDjRetry(engine);
+          return;
+        }
+
         if (!radioUrlsMatch(engine.lastUrl, desiredUrl) || normalizeRadioUrl(engine.lastUrl) !== normalizeRadioUrl(desiredUrl)) {
           switchEngineStream(engine, desiredUrl);
         }
@@ -797,7 +1193,9 @@
       engine.wantPlay = false;
       engine.waitingForAudio = false;
       engine.audioDetected = false;
+      engine.silenceStartedAt = 0;
       clearAudioDetection(engine);
+      stopAutoDjMode(engine);
       detachSource(engine);
       try { if (Number.isFinite(engine.audio.currentTime)) engine.audio.currentTime = 0; } catch (_error) {}
       notifyEngineState(engine);
@@ -810,11 +1208,13 @@
       var controlHost = control && (control.classList.contains('re-element') ? control : control.closest('.re-element'));
       if (engine.hostNode) url = resolvePreferredRadioUrl(engine.hostNode);
       if (!url && controlHost) url = resolvePreferredRadioUrl(controlHost);
-      if (!url) url = resolveManagedRadioUrl();
+      if (!url) url = resolveManagedRadioUrl(null, controlHost || engine.hostNode || document.body);
       if (shouldPlay) {
+        stopAutoDjMode(engine);
         engine.wantPlay = true;
         engine.waitingForAudio = true;
         engine.audioDetected = false;
+        engine.silenceStartedAt = 0;
         ensureAudioAnalyser(engine);
         notifyEngineState(engine);
         attachSource(engine, url).then(function () {
@@ -825,11 +1225,7 @@
             var p = engine.audio.play();
             if (p && typeof p.catch === 'function') {
               p.catch(function () {
-                engine.wantPlay = false;
-                engine.waitingForAudio = false;
-                engine.audioDetected = false;
-                clearAudioDetection(engine);
-                notifyEngineState(engine);
+                handleManagedStreamFailure(engine, 'play-catch');
               });
             }
             startAudioDetection(engine);
@@ -856,6 +1252,7 @@
       var engine = engineFromControl(control);
       if (!engine) return;
       engine.audio.volume = Math.max(0, Math.min(1, Number(value || 0) / 100));
+      persistVolume(engine.audio.volume);
       if (engine.audio.volume > 0 && engine.audio.muted) engine.audio.muted = false;
       var host = control && (control.classList.contains('re-element') ? control : control.closest('.re-element'));
       var slider = host ? host.querySelector('.re-volume-slider') : null;
@@ -885,12 +1282,6 @@
     syncManagedStreams();
     setInterval(syncManagedStreams, 1000);
     syncAll();
-
-    Array.prototype.slice.call(document.querySelectorAll('.re-type-player .re-audio')).forEach(function (audio) {
-      try {
-        audio.load();
-      } catch (_error) {}
-    });
   }
 
 
@@ -1413,7 +1804,7 @@
         lastRenderKey = renderKey;
         renderFromCache();
       }
-      if (!lastSourceRefreshAt || (Date.now() - lastSourceRefreshAt) >= 10000) {
+      if (!lastSourceRefreshAt || (Date.now() - lastSourceRefreshAt) >= 240000) {
         lastSourceRefreshAt = Date.now();
         refreshFromSource();
       }

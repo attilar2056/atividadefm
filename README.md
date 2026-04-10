@@ -18,6 +18,7 @@ Um redesign moderno, responsivo e totalmente funcional da página da Rádio Ativ
 
 ### Funcionalidades
 - **Player de Rádio**: Play/Pause com controle de volume
+- **Volume com Persistência**: O volume escolhido pelo usuário é salvo no `localStorage` e restaurado automaticamente ao abrir o site novamente
 - **Disco Girando**: Animação do vinil que gira quando a rádio está tocando ✅
 - **Tema Escuro**: Toggle entre tema claro e escuro com persistência
 - **Carrossel**: Rotação automática de imagens promocionais
@@ -31,16 +32,15 @@ Um redesign moderno, responsivo e totalmente funcional da página da Rádio Ativ
 ```
 radio-atividade-novo/
 ├── index.html           # Arquivo HTML principal
+├── script.js            # Funcionalidades JavaScript
 ├── css/
-│   └── style.css       # Estilos CSS responsivos
-├── js/
-│   └── script.js       # Funcionalidades JavaScript
+│   └── style.css        # Estilos CSS responsivos
 ├── assets/
 │   ├── base/
 │   │   ├── logo.png
 │   │   └── vinyl.png
-│   └── uploads/        # Imagens de promoções e programação
-└── README.md           # Este arquivo
+│   └── uploads/         # Imagens de promoções e programação
+└── README.md            # Este arquivo
 ```
 
 ## 🚀 Como Usar
@@ -78,14 +78,10 @@ Edite as variáveis CSS no início do arquivo `css/style.css`:
 ```
 
 ### Rádio
-Para mudar a URL da rádio, edite em `js/script.js`:
-
-```javascript
-<source src="https://stream.zeno.fm/zh7jkchfce4uv" type="audio/mpeg" />
-```
+Para mudar a URL da rádio, edite no arquivo `index.html` ou no `script.js`, dependendo de como o player estiver configurado na versão atual do projeto.
 
 ### Programação
-Edite o array `scheduleData` em `js/script.js` para adicionar/modificar programas.
+Edite a fonte de programação usada pelo projeto, como `programas/programacao.json`, ou ajuste a lógica correspondente em `script.js`.
 
 ### Imagens
 Coloque novas imagens na pasta `assets/uploads/` e atualize as referências no HTML e JavaScript.
@@ -102,6 +98,7 @@ Coloque novas imagens na pasta `assets/uploads/` e atualize as referências no H
 - HTML5 semântico
 - CSS3 com Grid e Flexbox
 - JavaScript vanilla (sem dependências)
+- Persistência local com `localStorage` para tema e volume
 - APIs externas:
   - Zeno.fm (streaming de rádio)
   - RSS2JSON (notícias)
@@ -109,7 +106,16 @@ Coloque novas imagens na pasta `assets/uploads/` e atualize as referências no H
 
 ## 🌙 Tema Escuro
 
-O tema escuro é salvo automaticamente no localStorage do navegador. O usuário pode alternar entre temas clicando no ícone no canto superior direito.
+O tema escuro é salvo automaticamente no `localStorage` do navegador. O usuário pode alternar entre temas clicando no ícone no canto superior direito.
+
+## 🔊 Volume Salvo
+
+O volume escolhido pelo usuário também é salvo automaticamente no `localStorage` do navegador.
+
+Isso significa que:
+- ao ajustar o volume, o valor fica gravado no navegador;
+- ao fechar e abrir o site novamente, o player tenta restaurar o último volume usado;
+- essa persistência é local, ou seja, vale para aquele navegador/dispositivo.
 
 ## 🎵 Animação do Vinil
 
@@ -150,4 +156,4 @@ Este projeto é fornecido como está para uso da Rádio Atividade.
 
 ---
 
-**Desenvolvido com ❤️ para Rádio Atividade**
+**Desenvolvido para Rádio Atividade**
