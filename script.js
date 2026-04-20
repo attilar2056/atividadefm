@@ -134,7 +134,7 @@
       localStorage.setItem(VOLUME_STORAGE_KEY, String(normalized));
     } catch (_error) {}
   }
-  var DEFAULT_RADIO_STREAM_URL = 'https://stream.zeno.fm/z2h3tpp2fchvv';
+  var DEFAULT_RADIO_STREAM_URL = 'https://stream.zeno.fm/zh7jkchfce4uv';
   var VOZ_DO_BRASIL_STREAM_URL = 'http://radioaovivo.senado.gov.br/canal2.mp3';
   var AUTO_DJ_RETRY_INTERVAL_MS = 15 * 1000;
   var AUTO_DJ_STREAM_TIMEOUT_MS = 12 * 1000;
