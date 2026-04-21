@@ -1,0 +1,109 @@
+
+/* Overrides de performance da versão refatorada */
+.re-element,
+.re-image-inner,
+.re-vinyl-image,
+.re-current-program-photo,
+.re-image-loop-img,
+.re-radio-cover,
+.re-news-item,
+.re-weather-widget {
+  will-change: auto !important;
+}
+
+#page-stage .re-element[data-id="el_76a7i630"],
+#page-stage .re-element[data-id="el_cf6i7i2c"],
+#page-stage .re-element[data-id="el_jp80pqok"] {
+  filter: none !important;
+}
+
+#page-stage .re-element[data-id="el_vmiu5d4m"]::after {
+  filter: none !important;
+  opacity: .72 !important;
+}
+
+.re-news-item,
+.re-image-loop-img,
+.re-vinyl-image,
+.re-live-badge,
+.re-play-btn,
+.re-theme-toggle-track,
+.re-theme-toggle-alt-track,
+.re-theme-toggle-alt-thumb,
+.re-volume-slider {
+  transition: none !important;
+}
+
+.re-type-vinyl,
+.re-type-radio-metadata,
+.re-type-news,
+.re-type-image-loop,
+.re-type-weather-rio,
+.re-type-schedule-photo-current {
+  contain: layout paint style !important;
+}
+
+.re-vinyl-image,
+.re-current-program-photo,
+.re-image-loop-img,
+.re-image-inner {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.re-news-item:hover {
+  background: inherit !important;
+}
+
+.re-radio-metadata-shell {
+  width: 100%;
+  height: 100%;
+}
+.urm-widget {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 96px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(12, 12, 12, 0.92);
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.urm-cover-wrap {
+  flex: 0 0 82px;
+  width: 82px;
+  height: 82px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+.urm-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.urm-meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.urm-song,
+.urm-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.urm-song {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.urm-artist {
+  margin-top: 6px;
+  font-size: 0.96rem;
+  opacity: 0.92;
+}
