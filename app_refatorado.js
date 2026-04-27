@@ -493,11 +493,11 @@ var METADATA_IGNORE_BLACKLIST = [
     return current;
   }
 
-  function isVoiceWeekday() {
+  function isVoiceWeekday(clock) {
     return false;
   }
 
-  function isVoiceWindow() {
+  function isVoiceWindow(clock) {
     return false;
   }
 
@@ -506,7 +506,7 @@ var METADATA_IGNORE_BLACKLIST = [
     return Promise.resolve(false);
   }
 
-  function getDesiredStreamUrl() {
+  function getDesiredStreamUrl(clock) {
     return DEFAULT_STREAM_URL;
   }
 
@@ -889,7 +889,8 @@ var METADATA_IGNORE_BLACKLIST = [
     var subLine = safeText(card && (card.subtitle || card.artist || '')).trim();
     if (!mainLine) mainLine = 'ATIVIDADE FM';
     if (cover) setFreshImageSource(cover, card.cover || app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png', {
-      fallback: app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png'
+      fallback: app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png',
+      force: true
     });
     if (song) song.textContent = mainLine;
     if (artist) {
@@ -1285,6 +1286,10 @@ var METADATA_IGNORE_BLACKLIST = [
       return;
     }
 
+    if (app.currentTrack && app.currentTrack.commercial && safeText(app.currentTrack.rawTitle).trim() === raw) {
+      return;
+    }
+
     if (getQueuedCommercialIndex(raw) !== -1) {
       return;
     }
@@ -1570,16 +1575,22 @@ var METADATA_IGNORE_BLACKLIST = [
       renderMetadataCard(app.currentTrack);
     } else if (app.pendingMetadataKind === 'commercial') {
       if (app.pendingTrackRevealAt && Date.now() < app.pendingTrackRevealAt) {
-        if (app.displayedMetadataKind === 'program') {
-          renderMetadataCard(currentProgramCard());
-        } else if (app.currentTrack && app.currentTrack.commercial) {
-          renderMetadataCard(app.currentTrack);
-        }
+        renderMetadataCard(currentProgramCard());
       } else {
         revealCommercialNow(app.pendingMetadataRaw, app.pendingCommercialInfo, { forceRender: true });
       }
+    } else if (app.pendingMetadataKind === 'music') {
+      if (app.pendingTrackRevealAt && Date.now() < app.pendingTrackRevealAt) {
+        renderMetadataCard(currentProgramCard());
+      } else if (app.pendingMetadataRaw) {
+        revealTrackNow(app.pendingMetadataRaw, { forceRender: true });
+      } else if (app.currentTrack && app.currentTrack.rawTitle) {
+        renderMetadataCard(app.currentTrack);
+      } else {
+        renderProgramMetadataCard({ forceRender: true });
+      }
     } else if (app.currentTrack && app.currentTrack.rawTitle) {
-      renderTrackMetadata(app.currentTrack.rawTitle, { forceRender: true, forceSearch: true });
+      renderMetadataCard(app.currentTrack);
     } else {
       renderProgramMetadataCard({ forceRender: true });
     }
@@ -2206,7 +2217,7 @@ var METADATA_IGNORE_BLACKLIST = [
 
   function runStreamTick() {
     switchStreamIfNeeded();
-    if (!app.currentTrack && !app.pendingMetadataKind) renderMetadataCard(currentProgramCard());
+    if (!app.currentTrack && isUiActive()) renderMetadataCard(currentProgramCard());
   }
 
   function boot() {
@@ -2228,7 +2239,7 @@ var METADATA_IGNORE_BLACKLIST = [
       fetchWeather();
       switchStreamIfNeeded();
       connectMetadata();
-      renderMetadataCard(currentProgramCard());
+      if (!app.currentTrack) renderMetadataCard(currentProgramCard());
     });
 
     app.uiTickTimer = setInterval(runUiTick, 1000);
