@@ -1,0 +1,44 @@
+{
+  "comerciais": [
+    {
+      "id": "anuncie_nova",
+      "title": "Anuncie na Rádio",
+      "image": "assets/uploads/anuncie.jpg"
+    },
+    {
+      "id": "canelinha",
+      "title": "Comercial Projeto Canelinhas",
+      "image": "assets/uploads/images.jpg"
+    },
+    {
+      "id": "comercial_eletronica_jpa",
+      "title": "Comercial Eletrônica Jacarepaguá",
+      "image": "assets/uploads/1777320938504_Design_sem_nome.jpg"
+    },
+    {
+      "id": "faculdade_infrain",
+      "title": "Comercial Faculdade Efrain",
+      "image": "assets/uploads/efraim-cursos.png"
+    },
+    {
+      "id": "gezin_regularizacao",
+      "title": "Comercial Gazin Regularização",
+      "image": "assets/uploads/Capa-725x1024.jpg"
+    },
+    {
+      "id": "real_pax_1",
+      "title": "Comercial Real pax",
+      "image": "assets/uploads/LOGO-REAL-PAX-MAIS-DE-70-ANOS-FINALIZADA.webp"
+    },
+    {
+      "id": "real_px_voz",
+      "title": "Comercial  Real pax",
+      "image": "assets/uploads/LOGO-REAL-PAX-MAIS-DE-70-ANOS-FINALIZADA.webp"
+    },
+    {
+      "id": "spot_hellos_auto_center",
+      "title": "Comercial Hellos Auto Center",
+      "image": "assets/uploads/1777319757996_images_1.png"
+    }
+  ]
+}

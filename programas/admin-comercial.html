@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comerciais da Rádio</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --line: #d8e0ec;
+      --text: #132238;
+      --muted: #5a6b85;
+      --accent: #305fbd;
+      --accent-dark: #264a94;
+      --danger: #c53939;
+      --ok: #217a42;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 16px 0 28px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      background: rgba(243, 246, 251, 0.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 760px;
+      line-height: 1.35;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.secondary { background: #70819a; }
+    button.danger { background: var(--danger); }
+    button.ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .status {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .status.ok { color: var(--ok); }
+    .status.error { color: var(--danger); }
+
+    .list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      cursor: pointer;
+      text-align: left;
+      color: var(--text);
+    }
+
+    .item img,
+    .preview-img {
+      width: 96px;
+      height: 96px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #e9eef6;
+      border: 1px solid var(--line);
+      display: block;
+    }
+
+    .item-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .item-id {
+      color: var(--muted);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(19, 34, 56, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .overlay.open { display: flex; }
+
+    .modal {
+      width: min(720px, 100%);
+      background: #fff;
+      color: var(--text);
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 80px rgba(18, 37, 63, 0.28);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #eef3fb;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .modal-body {
+      padding: 16px 18px 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 128px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .preview-box {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .right-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .preview-box { justify-items: start; }
+      .modal-footer { flex-direction: column; }
+      .right-actions { justify-content: stretch; }
+      .right-actions button, .modal-footer > button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <h1>Comerciais da Rádio</h1>
+        <p>Este painel edita o arquivo <strong>programas/comercial.json</strong>. O ID precisa ser igual ao ID usado na lista de comerciais dentro do app_refatorado.js.</p>
+      </div>
+      <button type="button" id="newBtn">Novo comercial</button>
+    </header>
+
+    <div id="status" class="status">Carregando...</div>
+    <main id="list" class="list"></main>
+  </div>
+
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <section class="modal">
+      <header class="modal-header">
+        <h2 id="modalTitle">Editar comercial</h2>
+        <button type="button" class="ghost" id="closeBtn">Fechar</button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="preview-box">
+            <img id="preview" class="preview-img" src="../assets/base/logo.png" alt="Logo" />
+            <input id="fileInput" type="file" accept="image/*" hidden />
+            <button type="button" class="secondary" id="uploadBtn">Enviar logo</button>
+          </div>
+
+          <div class="fields">
+            <label>
+              ID do comercial
+              <input id="idInput" placeholder="ex: canelinha" autocomplete="off" />
+            </label>
+
+            <label>
+              Nome que será exibido
+              <input id="titleInput" placeholder="ex: Projeto Canelinhas" autocomplete="off" />
+            </label>
+
+            <label>
+              Caminho da imagem/logo
+              <div class="row">
+                <input id="imageInput" placeholder="assets/uploads/logo.png" autocomplete="off" />
+                <button type="button" class="secondary" id="reuseBtn">Usar caminho</button>
+              </div>
+            </label>
+
+            <div class="hint">
+              Exemplo: se o metadado vier como <strong>canelinha</strong>, o app procura o ID <strong>canelinha</strong> neste JSON. Se encontrar, mostra este nome e esta logo. Se não encontrar, usa o nome original e a logo padrão da rádio.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="danger" id="deleteBtn">Excluir</button>
+        <div class="right-actions">
+          <button type="button" class="secondary" id="cancelBtn">Cancelar</button>
+          <button type="button" id="saveBtn">Salvar</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    const state = { items: [], editingId: '' };
+    const list = document.getElementById('list');
+    const statusEl = document.getElementById('status');
+    const overlay = document.getElementById('overlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const idInput = document.getElementById('idInput');
+    const titleInput = document.getElementById('titleInput');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    function setStatus(text, type = '') {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function normalizeId(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/@/g, 'a')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+
+    function imageSrc(path) {
+      const safe = String(path || '').trim() || 'assets/base/logo.png';
+      if (/^(?:https?:)?\/\//i.test(safe) || safe.startsWith('data:')) return safe;
+      if (safe.startsWith('../')) return safe;
+      return '../' + safe.replace(/^\/+/, '');
+    }
+
+    function renderList() {
+      list.innerHTML = '';
+      if (!state.items.length) {
+        list.innerHTML = '<div class="status">Nenhum comercial cadastrado.</div>';
+        return;
+      }
+
+      state.items.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'item';
+        btn.innerHTML = `
+          <img src="${imageSrc(item.image)}" alt="">
+          <div>
+            <div class="item-title"></div>
+            <div class="item-id"></div>
+          </div>
+        `;
+        btn.querySelector('.item-title').textContent = item.title || item.id;
+        btn.querySelector('.item-id').textContent = item.id;
+        btn.addEventListener('click', () => openModal(item));
+        list.appendChild(btn);
+      });
+    }
+
+    async function fetchJson(url, options) {
+      const res = await fetch(url, options);
+      const data = await res.json();
+      if (!res.ok || data.ok === false) throw new Error(data.error || 'Falha na requisição.');
+      return data;
+    }
+
+    async function loadState() {
+      try {
+        setStatus('Carregando...');
+        const response = await fetchJson('/api/admin/state');
+        state.items = Array.isArray(response.data && response.data.comerciais) ? response.data.comerciais : [];
+        renderList();
+        setStatus(`Comerciais carregados: ${state.items.length}`, 'ok');
+      } catch (error) {
+        setStatus(error.message || 'Erro ao carregar.', 'error');
+      }
+    }
+
+    function openModal(item) {
+      const data = item || { id: '', title: '', image: 'assets/base/logo.png' };
+      state.editingId = data.id || '';
+      modalTitle.textContent = state.editingId ? 'Editar comercial' : 'Novo comercial';
+      idInput.value = data.id || '';
+      titleInput.value = data.title || '';
+      imageInput.value = data.image || 'assets/base/logo.png';
+      preview.src = imageSrc(imageInput.value);
+      deleteBtn.style.visibility = state.editingId ? 'visible' : 'hidden';
+      overlay.classList.add('open');
+      setTimeout(() => idInput.focus(), 50);
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+    }
+
+    async function saveItem() {
+      try {
+        const payload = {
+          id: normalizeId(idInput.value),
+          title: titleInput.value.trim(),
+          image: imageInput.value.trim() || 'assets/base/logo.png'
+        };
+        if (!payload.id) throw new Error('Informe um ID válido.');
+        if (!payload.title) throw new Error('Informe o nome que será exibido.');
+
+        const response = await fetchJson('/api/admin/save-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        state.items = response.data.comerciais || [];
+        renderList();
+        closeModal();
+        setStatus('Comercial salvo.', 'ok');
+      } catch (error) {
+        setStatus(error.message || 'Erro ao salvar.', 'error');
+      }
+    }
+
+    async function deleteItem() {
+      if (!state.editingId) return;
+      if (!confirm('Excluir este comercial?')) return;
+      try {
+        const response = await fetchJson('/api/admin/delete-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: state.editingId })
+        });
+        state.items = response.data.comerciais || [];
+        renderList();
+        closeModal();
+        setStatus('Comercial excluído.', 'ok');
+      } catch (error) {
+        setStatus(error.message || 'Erro ao excluir.', 'error');
+      }
+    }
+
+    async function uploadSelectedFile(file) {
+      if (!file) return;
+      try {
+        setStatus('Enviando logo...');
+        const res = await fetch('/api/upload?filename=' + encodeURIComponent(file.name), {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          body: file
+        });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Erro ao enviar logo.');
+        imageInput.value = data.relativePath;
+        preview.src = imageSrc(data.relativePath) + '?_=' + Date.now();
+        setStatus(data.reused ? 'Logo existente reaproveitada.' : 'Logo enviada.', 'ok');
+      } catch (error) {
+        setStatus(error.message || 'Erro ao enviar logo.', 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    }
+
+    document.getElementById('newBtn').addEventListener('click', () => openModal(null));
+    document.getElementById('closeBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('saveBtn').addEventListener('click', saveItem);
+    document.getElementById('deleteBtn').addEventListener('click', deleteItem);
+    document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+    document.getElementById('reuseBtn').addEventListener('click', () => {
+      preview.src = imageSrc(imageInput.value) + '?_=' + Date.now();
+      setStatus('Prévia atualizada com o caminho informado.', 'ok');
+    });
+    fileInput.addEventListener('change', () => uploadSelectedFile(fileInput.files[0]));
+    imageInput.addEventListener('input', () => { preview.src = imageSrc(imageInput.value); });
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) closeModal(); });
+    window.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+
+    loadState();
+  </script>
+</body>
+</html>

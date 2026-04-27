@@ -9,6 +9,29 @@
   var WEATHER_API = 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current_weather=true&timezone=America/Sao_Paulo';
   var VOZ_STATE_URL = 'voz.json';
   var PROGRAMS_URL = 'programas/programacao.json';
+  var COMMERCIALS_URL = 'programas/comercial.json';
+
+  // Blacklist de metadados: se o texto do stream contiver algum termo abaixo,
+  // o player ignora esse metadado e mantém a capa/título anterior.
+  // Adicione novas frases aqui quando aparecerem metadados técnicos ou indesejados.
+  var METADATA_IGNORE_BLACKLIST = [
+    'passagem 106 tocada',
+    'abertura caio martins'
+  ];
+
+  // Lista local que decide quais metadados são comerciais.
+  // O id precisa bater com o id cadastrado em programas/comercial.json para usar logo/título personalizado.
+  // Se o id não existir no JSON, o player usa o nome original do metadado e a logo da rádio.
+  var COMMERCIAL_METADATA_LIST = [
+    { id: 'canelinha', terms: ['canelinha'] },
+    { id: 'gezin_regularizacao', terms: ['gezin regularização', 'gezin regularizacao'] },
+    { id: 'real_px_voz', terms: ['real px voz'] },
+    { id: 'real_pax_1', terms: ['real pax 1'] },
+    { id: 'spot_hellos_auto_center', terms: ['spot hellos auto center', 'hellos auto center'] },
+    { id: 'comercial_eletronica_jpa', terms: ['comercial eletronica jpa', 'comercial eletrônica jpa', 'eletronica jpa', 'eletrônica jpa'] },
+    { id: 'faculdade_infrain', terms: ['f@culd@de infr@in', 'faculdade infrain'] },
+    { id: 'anuncie_nova', terms: ['anuncie nova'] }
+  ];
   var VOLUME_STORAGE_KEY = 'radioatividade-volume';
   var THEME_STORAGE_KEY = 'radioatividade-theme';
   var WEEKDAY_ORDER = ['dom', 'seg', 'ter', 'quar', 'qui', 'sex', 'sab'];
@@ -34,7 +57,9 @@
     '9.png': 'https://i.imgur.com/9E4GdKH.gif',
     '9.jpg': 'https://i.imgur.com/9E4GdKH.gif',
     '10.png': 'https://i.imgur.com/ZRKGta4.gif',
-    '10.jpg': 'https://i.imgur.com/ZRKGta4.gif'
+    '10.jpg': 'https://i.imgur.com/ZRKGta4.gif',
+    '11.png': 'https://i.imgur.com/xnVAiKY.gif',
+    '11.jpg': 'https://i.imgur.com/xnVAiKY.gif'
   };
 
   var app = {
@@ -49,6 +74,7 @@
     newsHosts: [],
     bannerHosts: [],
     programs: [],
+    commercialsById: Object.create(null),
     currentClock: null,
     currentProgram: null,
     currentTrack: null,
@@ -124,10 +150,15 @@
     return normalized;
   }
 
-  function timeToMinutes(hhmm) {
-    var m = String(hhmm || '').match(/^(\d{1,2}):(\d{2})$/);
+  function timeToMinutes(hhmm, missingSeconds) {
+    var m = String(hhmm || '').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
     if (!m) return null;
-    return Number(m[1]) * 60 + Number(m[2]);
+    var hour = Number(m[1]);
+    var minute = Number(m[2]);
+    var second = m[3] == null ? Number(missingSeconds || 0) : Number(m[3]);
+    if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) return null;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) return null;
+    return (hour * 3600) + (minute * 60) + second;
   }
 
   function parseProgramsPayload(data) {
@@ -139,8 +170,8 @@
 
   function cloneScheduleItem(item) {
     item = item || {};
-    var startMinutes = timeToMinutes(item.start || item.inicio || '');
-    var endMinutes = timeToMinutes(item.end || item.fim || '');
+    var startMinutes = timeToMinutes(item.start || item.inicio || '', 0);
+    var endMinutes = timeToMinutes(item.end || item.fim || '', 59);
     return {
       id: item.id || '',
       title: item.title || item.programa || '',
@@ -292,6 +323,7 @@
       pseudoUtcMs: baseUtc,
       weekday: weekday,
       minutes: (hour * 60) + minute,
+      daySeconds: (hour * 3600) + (minute * 60) + second,
       year: year,
       month: month,
       day: day,
@@ -324,6 +356,7 @@
       pseudoUtcMs: Date.UTC(year, month - 1, day, hour, minute, second, 0),
       weekday: weekday,
       minutes: (hour * 60) + minute,
+      daySeconds: (hour * 3600) + (minute * 60) + second,
       year: year, month: month, day: day, hour: hour, minute: minute, second: second,
       timezone: TIMEZONE
     };
@@ -338,6 +371,7 @@
       pseudoUtcMs: date.getTime(),
       weekday: WEEKDAY_ORDER[date.getUTCDay()],
       minutes: (date.getUTCHours() * 60) + date.getUTCMinutes(),
+      daySeconds: (date.getUTCHours() * 3600) + (date.getUTCMinutes() * 60) + date.getUTCSeconds(),
       year: date.getUTCFullYear(),
       month: date.getUTCMonth() + 1,
       day: date.getUTCDate(),
@@ -373,10 +407,46 @@
     });
   }
 
+  function parseCommercialsPayload(data) {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.comerciais)) return data.comerciais;
+    if (data && Array.isArray(data.commercials)) return data.commercials;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
+  }
+
+  function normalizeCommercialId(value) {
+    return stripAccents(String(value || ''))
+      .toLowerCase()
+      .replace(/@/g, 'a')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  function loadCommercials() {
+    return fetchJson(COMMERCIALS_URL).then(function (data) {
+      var map = Object.create(null);
+      parseCommercialsPayload(data).forEach(function (item) {
+        var id = normalizeCommercialId(item && item.id);
+        if (!id) return;
+        map[id] = {
+          id: id,
+          title: safeText(item && item.title).trim(),
+          image: safeText(item && item.image).trim()
+        };
+      });
+      app.commercialsById = map;
+      return map;
+    }).catch(function () {
+      app.commercialsById = Object.create(null);
+      return app.commercialsById;
+    });
+  }
+
   function findProgram(clock) {
     var ctx = clock || getClockContext();
     var weekday = ctx.weekday;
-    var minutes = ctx.minutes;
+    var seconds = Number.isFinite(Number(ctx.daySeconds)) ? Number(ctx.daySeconds) : (Number(ctx.minutes || 0) * 60);
     var current = null;
     app.programs.forEach(function (item) {
       if (!item || !item.start || !item.end) return;
@@ -385,13 +455,13 @@
       var startMinutes = Number(item.startMinutes);
       var endMinutes = Number(item.endMinutes);
       if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes)) return;
-      var currentMinutes = minutes;
+      var currentSeconds = seconds;
       var endAdjusted = endMinutes;
       if (endAdjusted <= startMinutes) {
-        endAdjusted += 24 * 60;
-        if (currentMinutes < startMinutes) currentMinutes += 24 * 60;
+        endAdjusted += 24 * 60 * 60;
+        if (currentSeconds < startMinutes) currentSeconds += 24 * 60 * 60;
       }
-      if (currentMinutes >= startMinutes && currentMinutes < endAdjusted) current = item;
+      if (currentSeconds >= startMinutes && currentSeconds <= endAdjusted) current = item;
     });
     return current;
   }
@@ -591,15 +661,72 @@
     return Math.max(editScore, tokenScore * 0.95);
   }
 
+  function normalizeMetadataLookup(value) {
+    return stripAccents(String(value || ''))
+      .toLowerCase()
+      .replace(/@/g, 'a')
+      .replace(/&/g, ' e ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function isMetadataBlacklisted(rawTitle) {
+    var normalized = normalizeMetadataLookup(rawTitle);
+    if (!normalized) return false;
+    return METADATA_IGNORE_BLACKLIST.some(function (term) {
+      var safeTerm = normalizeMetadataLookup(term);
+      return safeTerm && normalized.indexOf(safeTerm) !== -1;
+    });
+  }
+
+  function findCommercialMetadata(rawTitle) {
+    var normalized = normalizeMetadataLookup(rawTitle);
+    if (!normalized) return null;
+
+    for (var i = 0; i < COMMERCIAL_METADATA_LIST.length; i += 1) {
+      var item = COMMERCIAL_METADATA_LIST[i] || {};
+      var id = normalizeCommercialId(item.id || '');
+      var terms = Array.isArray(item.terms) ? item.terms : [item.term || item.id || ''];
+      for (var j = 0; j < terms.length; j += 1) {
+        var term = normalizeMetadataLookup(terms[j]);
+        if (term && normalized.indexOf(term) !== -1) {
+          return { id: id, term: terms[j] };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function stripQualityMarkers(value) {
+    return String(value || '')
+      .replace(/(?:^|[\s_\-])(?:320|256|192|160|128|112|96|80|64)\s*k(?:bps)?(?=$|[\s_\-])/gi, ' ')
+      .replace(/(?:^|[\s_\-])(?:320|256|192|160|128|112|96|80|64)\s*kbps(?=$|[\s_\-])/gi, ' ');
+  }
+
+  function isQualityMetadataSegment(value) {
+    return /^(?:320|256|192|160|128|112|96|80|64)\s*k(?:bps)?$/i.test(cleanupMetadataChunk(value).replace(/\s+/g, ''));
+  }
+
+  function isAlbumLikeMetadataSegment(value) {
+    var normalized = normalizeMetadataLookup(value);
+    if (!normalized) return false;
+    if (/\b(?:19|20)\d{2}\b/.test(normalized)) return true;
+    return /\b(album|novela|trilha|soundtrack|remaster|remastered|edition|edicao|edição)\b/.test(normalized);
+  }
+
   function cleanupMetadataChunk(value) {
     var s = String(value || '');
     s = s.replace(/\.[a-z0-9]{2,4}$/i, '');
+    s = stripQualityMarkers(s);
     s = s.replace(/[_]+/g, ' ');
     s = s.replace(/[–—]+/g, '-');
     s = s.replace(/\s*-\s*/g, ' - ');
     s = s.replace(/^[0-9]{1,3}[\s.\-_]+/, '');
     s = s.replace(/\s*-\s*[0-9]{2,3}\s*bpm/gi, '');
     s = s.replace(/\s*[\(\[][^^\)\]]*[\)\]]/g, '');
+    s = stripQualityMarkers(s);
     s = s.replace(/\s+/g, ' ').trim();
     s = s.replace(/^[-\s]+|[-\s]+$/g, '').trim();
     return s;
@@ -638,9 +765,16 @@
   }
 
   function isCollectionMetadataSegment(value) {
-    var normalized = normalizeComparable(value);
+    var normalized = normalizeMetadataLookup(value);
     if (!normalized) return false;
-    return /(cd|disc|disk|disco|vol|volume|faixa|track)/.test(normalized);
+    return /\b(cd|disc|disk|disco|vol|volume|faixa|track)\b/.test(normalized);
+  }
+
+  function isNoiseMetadataSegment(value) {
+    return isNumericMetadataSegment(value)
+      || isCollectionMetadataSegment(value)
+      || isQualityMetadataSegment(value)
+      || isAlbumLikeMetadataSegment(value);
   }
 
   function chooseArtistSongFromParts(parts) {
@@ -652,9 +786,9 @@
       var first = cleanParts[0];
       var middle = cleanParts[1];
       var last = cleanParts[2];
-      if (isNumericMetadataSegment(middle)) return { artist: first, song: last };
-      if (isNumericMetadataSegment(first)) return { artist: middle, song: last };
-      if (isNumericMetadataSegment(last)) return { artist: first, song: middle };
+      if (isNoiseMetadataSegment(middle)) return { artist: last, song: first };
+      if (isNoiseMetadataSegment(first)) return { artist: middle, song: last };
+      if (isNoiseMetadataSegment(last)) return { artist: middle, song: first };
     }
 
     if (cleanParts.length >= 4) {
@@ -664,8 +798,8 @@
     if (cleanParts.length >= 3) {
       var prefix = cleanParts.slice(0, -2);
       var hasPrefixNoise = prefix.some(function (part) {
-        return isNumericMetadataSegment(part) || isCollectionMetadataSegment(part);
-      }) || isNumericMetadataSegment(cleanParts[cleanParts.length - 2]);
+        return isNoiseMetadataSegment(part);
+      }) || isNoiseMetadataSegment(cleanParts[cleanParts.length - 2]);
       if (hasPrefixNoise) {
         return { artist: cleanParts[cleanParts.length - 2], song: cleanParts[cleanParts.length - 1] };
       }
@@ -1016,6 +1150,33 @@
   }
 
 
+  function buildCommercialCardFromRaw(rawTitle, commercialInfo) {
+    var id = normalizeCommercialId(commercialInfo && commercialInfo.id);
+    var item = id && app.commercialsById ? app.commercialsById[id] : null;
+    var originalName = cleanupMetadataChunk(rawTitle) || cleanupMetadataChunk(commercialInfo && commercialInfo.term) || 'Comercial';
+    var displayTitle = item && item.title ? item.title : originalName;
+    return {
+      rawTitle: safeText(rawTitle).trim(),
+      song: displayTitle,
+      artist: '',
+      displayTitle: displayTitle,
+      subtitle: '',
+      cover: item && item.image ? item.image : (app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png'),
+      pendingRefresh: false,
+      commercial: true
+    };
+  }
+
+  function renderCommercialMetadata(rawTitle, commercialInfo, options) {
+    options = options || {};
+    clearPendingTrackTimer();
+    app.pendingTrackRevealAt = 0;
+    app.lastMetadataRaw = safeText(rawTitle).trim();
+    app.currentTrack = buildCommercialCardFromRaw(rawTitle, commercialInfo);
+    app.metadataRequestId += 1;
+    if (isUiActive() || options.forceRender) renderMetadataCard(app.currentTrack);
+  }
+
 
   function buildTrackCardFromRaw(rawTitle, cover, metadataOverride) {
     var parsed = metadataOverride || parseRawTitle(rawTitle);
@@ -1092,6 +1253,13 @@
     options = options || {};
     var raw = safeText(rawTitle).trim();
     if (!raw) return;
+    if (isMetadataBlacklisted(raw)) return;
+
+    var commercialInfo = findCommercialMetadata(raw);
+    if (commercialInfo) {
+      renderCommercialMetadata(raw, commercialInfo, options);
+      return;
+    }
 
     var isNewTrack = app.lastMetadataRaw !== raw;
     var immediateCard = buildTrackCardFromRaw(raw, currentProgramCard().cover);
@@ -1163,6 +1331,13 @@
         var raw = payload && payload.streamTitle ? String(payload.streamTitle) : '';
         raw = safeText(raw).trim();
         if (!raw) return;
+        if (isMetadataBlacklisted(raw)) return;
+        var commercialInfo = findCommercialMetadata(raw);
+        if (commercialInfo) {
+          if (app.lastMetadataRaw === raw && app.currentTrack && app.currentTrack.commercial) return;
+          renderCommercialMetadata(raw, commercialInfo, { forceRender: isUiActive() });
+          return;
+        }
         if (app.lastMetadataRaw === raw && app.currentTrack && !app.currentTrack.pendingRefresh) return;
         if (isUiActive()) {
           renderTrackMetadata(raw, { forceRender: true, forceSearch: true, holdMs: 15000 });
@@ -1826,7 +2001,7 @@
     initNews();
     initBanners();
     fetchClock().then(function () {
-      return loadPrograms();
+      return Promise.all([loadPrograms(), loadCommercials()]);
     }).then(function () {
       renderScheduleDependentUi();
       fetchWeather();

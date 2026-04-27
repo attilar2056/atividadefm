@@ -24,6 +24,9 @@ const DAY_LABELS = {
   dom: 'Domingo'
 };
 
+const DAY_START_SECOND = 0;
+const DAY_END_SECOND = (24 * 60 * 60) - 1;
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -127,21 +130,84 @@ function normalizeWeekdays(input) {
   return result;
 }
 
-function timeToMinutes(value) {
-  const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+function timeToMinutes(value, options = {}) {
+  const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (!match) return null;
+
   const hour = Number(match[1]);
   const minute = Number(match[2]);
-  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null;
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-  return (hour * 60) + minute;
+  const missingSeconds = Number.isInteger(Number(options.missingSeconds)) ? Number(options.missingSeconds) : 0;
+  const second = match[3] == null ? missingSeconds : Number(match[3]);
+
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || !Number.isInteger(second)) return null;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) return null;
+
+  return (hour * 60 * 60) + (minute * 60) + second;
 }
 
-function minutesToTime(minutes) {
-  const safe = Math.max(0, Math.min(1439, Number(minutes) || 0));
-  const hour = Math.floor(safe / 60);
-  const minute = safe % 60;
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+function minutesToTime(seconds) {
+  const safe = Math.max(DAY_START_SECOND, Math.min(DAY_END_SECOND, Number(seconds) || 0));
+  const hour = Math.floor(safe / 3600);
+  const minute = Math.floor((safe % 3600) / 60);
+  const second = safe % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+}
+
+function normalizeTimeString(value, missingSeconds) {
+  const raw = String(value || '').trim();
+  if (!raw) return raw;
+  if (/^\d{1,2}:\d{2}:\d{2}$/.test(raw)) return raw;
+  if (!/^\d{1,2}:\d{2}$/.test(raw)) return raw;
+
+  const parsed = timeToMinutes(raw, { missingSeconds });
+  if (parsed === null) return raw;
+  return minutesToTime(parsed);
+}
+
+function normalizeScheduleTimes(schedule) {
+  if (!schedule || !Array.isArray(schedule.programas)) return { schedule, changed: false };
+
+  let changed = false;
+  const next = {
+    ...schedule,
+    programas: schedule.programas.map((program) => {
+      const item = { ...program };
+      const oldStart = String(item.start || '').trim();
+      const oldEnd = String(item.end || '').trim();
+      const newStart = normalizeTimeString(oldStart, 0);
+      const newEnd = normalizeTimeString(oldEnd, 59);
+
+      if (newStart && newStart !== oldStart) {
+        item.start = newStart;
+        changed = true;
+      }
+      if (newEnd && newEnd !== oldEnd) {
+        item.end = newEnd;
+        changed = true;
+      }
+      return item;
+    })
+  };
+
+  return { schedule: next, changed };
+}
+
+function normalizeScheduleFileOnBoot() {
+  if (!fs.existsSync(JSON_PATH)) return;
+
+  const raw = fs.readFileSync(JSON_PATH, 'utf8');
+  const parsed = JSON.parse(raw);
+  const normalized = normalizeScheduleTimes(parsed);
+  if (!normalized.changed) return;
+
+  const backupPath = path.join(
+    PROGRAMAS_DIR,
+    `programacao.backup-antes-segundos-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+  );
+
+  fs.writeFileSync(backupPath, raw, 'utf8');
+  fs.writeFileSync(JSON_PATH, JSON.stringify(normalized.schedule, null, 2) + '\n', 'utf8');
+  console.log(`Programação normalizada com segundos. Backup: ${backupPath}`);
 }
 
 function cloneSegment(segment) {
@@ -270,11 +336,11 @@ function readScheduleFile() {
 }
 
 function buildDayMaps(schedule) {
-  const maps = Object.fromEntries(DAY_ORDER.map((day) => [day, [makeEmptySegment(day, 0, 1439)]]));
+  const maps = Object.fromEntries(DAY_ORDER.map((day) => [day, [makeEmptySegment(day, DAY_START_SECOND, DAY_END_SECOND)]]));
 
   for (const item of schedule.programas) {
-    const startMin = timeToMinutes(item.start);
-    const endMin = timeToMinutes(item.end);
+    const startMin = timeToMinutes(item.start, { missingSeconds: 0 });
+    const endMin = timeToMinutes(item.end, { missingSeconds: 59 });
     const days = normalizeWeekdays(item.diaDaSemana || []);
     if (startMin === null || endMin === null || !days.length) continue;
 
@@ -294,7 +360,7 @@ function buildDayMaps(schedule) {
         maps[day] = applySegment(maps[day], {
           day,
           startMin,
-          endMin: 1439,
+          endMin: DAY_END_SECOND,
           ...data,
           empty: false
         });
@@ -302,7 +368,7 @@ function buildDayMaps(schedule) {
         const nextDay = DAY_ORDER[(DAY_ORDER.indexOf(day) + 1) % DAY_ORDER.length];
         maps[nextDay] = applySegment(maps[nextDay], {
           day: nextDay,
-          startMin: 0,
+          startMin: DAY_START_SECOND,
           endMin,
           ...data,
           empty: false
@@ -458,8 +524,8 @@ function segmentSignature(segment) {
 
 function findDeleteSuggestionDays(payload) {
   const day = normalizeWeekday(payload.day);
-  const startMin = timeToMinutes(payload.start);
-  const endMin = timeToMinutes(payload.end);
+  const startMin = timeToMinutes(payload.start, { missingSeconds: 0 });
+  const endMin = timeToMinutes(payload.end, { missingSeconds: 59 });
   if (!day || startMin === null || endMin === null) return [];
 
   const schedule = readScheduleFile();
@@ -476,8 +542,8 @@ function findDeleteSuggestionDays(payload) {
 
 function findSaveSuggestionDays(payload) {
   const day = normalizeWeekday(payload.day);
-  const startMin = timeToMinutes(payload.start);
-  const endMin = timeToMinutes(payload.end);
+  const startMin = timeToMinutes(payload.start, { missingSeconds: 0 });
+  const endMin = timeToMinutes(payload.end, { missingSeconds: 59 });
   if (!day || startMin === null || endMin === null) return [];
 
   const fields = sanitizeProgramFields(payload);
@@ -507,10 +573,10 @@ function findSaveSuggestionDays(payload) {
 
 function validateSavePayload(payload) {
   const day = normalizeWeekday(payload.day);
-  const originalStartMin = timeToMinutes(payload.originalStart);
-  const originalEndMin = timeToMinutes(payload.originalEnd);
-  const startMin = timeToMinutes(payload.start);
-  const endMin = timeToMinutes(payload.end);
+  const originalStartMin = timeToMinutes(payload.originalStart, { missingSeconds: 0 });
+  const originalEndMin = timeToMinutes(payload.originalEnd, { missingSeconds: 59 });
+  const startMin = timeToMinutes(payload.start, { missingSeconds: 0 });
+  const endMin = timeToMinutes(payload.end, { missingSeconds: 59 });
   const requestedDays = normalizeWeekdays(payload.days && payload.days.length ? payload.days : [day]);
   const targetDays = requestedDays.length ? requestedDays : (day ? [day] : []);
 
@@ -574,8 +640,8 @@ function handleSaveItemPayload(payload) {
 
 function handleDeleteItemPayload(payload) {
   const day = normalizeWeekday(payload.day);
-  const startMin = timeToMinutes(payload.start);
-  const endMin = timeToMinutes(payload.end);
+  const startMin = timeToMinutes(payload.start, { missingSeconds: 0 });
+  const endMin = timeToMinutes(payload.end, { missingSeconds: 59 });
   const requestedDays = normalizeWeekdays(payload.days && payload.days.length ? payload.days : [day]);
   const targetDays = requestedDays.length ? requestedDays : (day ? [day] : []);
 
@@ -740,6 +806,12 @@ const server = http.createServer(async (req, res) => {
 
   sendText(res, 404, 'Rota não encontrada.');
 });
+
+try {
+  normalizeScheduleFileOnBoot();
+} catch (error) {
+  console.error('Não foi possível normalizar os horários do programacao.json:', error.message || error);
+}
 
 server.listen(PORT, HOST, () => {
   console.log(`Painel da programação disponível em http://${HOST}:${PORT}`);
