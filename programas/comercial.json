@@ -6,6 +6,11 @@
       "image": "assets/uploads/anuncie.jpg"
     },
     {
+      "id": "aud_20260108_wa0300",
+      "title": "Comercial Corretora",
+      "image": "assets/uploads/casa.jpg"
+    },
+    {
       "id": "canelinha",
       "title": "Comercial Projeto Canelinhas",
       "image": "assets/uploads/images.jpg"
@@ -14,6 +19,11 @@
       "id": "comercial_eletronica_jpa",
       "title": "Comercial Eletrônica Jacarepaguá",
       "image": "assets/uploads/1777320938504_Design_sem_nome.jpg"
+    },
+    {
+      "id": "daniel_apvs",
+      "title": "Comercial APVS Cons. Daniel",
+      "image": "assets/uploads/1777325749048_logo_apvs-protecao-automotiva_oso8yX.png"
     },
     {
       "id": "faculdade_infrain",
@@ -26,7 +36,22 @@
       "image": "assets/uploads/Capa-725x1024.jpg"
     },
     {
+      "id": "off_mamae_festeira_1",
+      "title": "Comercial Mamãe festeira",
+      "image": "assets/uploads/baixados.jpg"
+    },
+    {
+      "id": "oracao_bp",
+      "title": "Oração com Bispo Edinaldo",
+      "image": "assets/uploads/1777324170544_Podcast_1.jpg"
+    },
+    {
       "id": "real_pax_1",
+      "title": "Comercial Real pax",
+      "image": "assets/uploads/LOGO-REAL-PAX-MAIS-DE-70-ANOS-FINALIZADA.webp"
+    },
+    {
+      "id": "real_pax_2",
       "title": "Comercial Real pax",
       "image": "assets/uploads/LOGO-REAL-PAX-MAIS-DE-70-ANOS-FINALIZADA.webp"
     },
@@ -39,6 +64,11 @@
       "id": "spot_hellos_auto_center",
       "title": "Comercial Hellos Auto Center",
       "image": "assets/uploads/1777319757996_images_1.png"
+    },
+    {
+      "id": "off_toca_do_bugre",
+      "title": "Comercial Toca do bugre",
+      "image": "assets/uploads/toca.jpg"
     }
   ]
 }

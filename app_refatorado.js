@@ -14,19 +14,41 @@
   // Blacklist de metadados: se o texto do stream contiver algum termo abaixo,
   // o player ignora esse metadado e mantém a capa/título anterior.
   // Adicione novas frases aqui quando aparecerem metadados técnicos ou indesejados.
-  var METADATA_IGNORE_BLACKLIST = [
-    'passagem 106 tocada',
-    'abertura caio martins'
-  ];
-
+var METADATA_IGNORE_BLACKLIST = [
+  'passagem 106 tocada',
+  'abertura caio martins',
+  'radio 106.1',
+  'locução de hora',
+  'zap zap',
+  'passagem 106',
+  'rd 106,1',
+  'quer mais 106',
+  'rd 1061',
+  '106 ,1 fm 106 fm a fm',
+  '106 ponto 1 fm',
+  '106,1 radio passagem',
+  '.mp3 volta já',
+  '.mp3vem ai  programa',
+  'sabe vht  das musicas',
+  '106 sem chiados',
+  'charm ea qui',
+  'ta gostando 106',
+  'aud-20241102-wa0027.mp3prefixo oficial oc 49m'
+];
   // Lista local que decide quais metadados são comerciais.
   // O id precisa bater com o id cadastrado em programas/comercial.json para usar logo/título personalizado.
   // Se o id não existir no JSON, o player usa o nome original do metadado e a logo da rádio.
   var COMMERCIAL_METADATA_LIST = [
     { id: 'canelinha', terms: ['canelinha'] },
+    { id: 'oraçao_bp', terms: ['oraçao bp', 'oraçao bp'] },
     { id: 'gezin_regularizacao', terms: ['gezin regularização', 'gezin regularizacao'] },
     { id: 'real_px_voz', terms: ['real px voz'] },
     { id: 'real_pax_1', terms: ['real pax 1'] },
+    { id: 'real_pax_2', terms: ['real pax 2'] },
+    { id: 'AUD-20260108-WA0300.', terms: ['AUD-20260108-WA0300.'] },
+    { id: 'OFF_toca_do_bugre', terms: ['OFF toca do bugre'] },
+    { id: 'postes', terms: ['postes'] },
+    { id: 'OFF_MAMAE_FESTEIRA_1', terms: ['OFF MAMAE FESTEIRA 1'] },
     { id: 'spot_hellos_auto_center', terms: ['spot hellos auto center', 'hellos auto center'] },
     { id: 'comercial_eletronica_jpa', terms: ['comercial eletronica jpa', 'comercial eletrônica jpa', 'eletronica jpa', 'eletrônica jpa'] },
     { id: 'faculdade_infrain', terms: ['f@culd@de infr@in', 'faculdade infrain'] },
@@ -858,7 +880,7 @@
     if (!app.metadataHost) return;
     var root = app.metadataHost.querySelector('.re-radio-metadata-shell');
     if (!root) {
-      app.metadataHost.innerHTML = '<div class="re-radio-metadata-shell"></div>';
+      app.metadataHost.innerHTML = '<div class="re-radio-metadata-shell">A voz do Brasil</div>';
       root = app.metadataHost.querySelector('.re-radio-metadata-shell');
     }
     if (!root) return;
