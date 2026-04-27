@@ -31,6 +31,8 @@ var METADATA_IGNORE_BLACKLIST = [
   '106 sem chiados',
   'charm ea qui',
   'ta gostando 106',
+  'Vinheta - trimega-3-na-sequencia',
+  'Locução de hora',
   'aud-20241102-wa0027.mp3prefixo oficial oc 49m'
 ];
   // Lista local que decide quais metadados são comerciais.
@@ -734,7 +736,7 @@ var METADATA_IGNORE_BLACKLIST = [
     s = stripQualityMarkers(s);
     s = s.replace(/[_]+/g, ' ');
     s = s.replace(/[–—]+/g, '-');
-    s = s.replace(/\s*-\s*/g, ' - ');
+    s = s.replace(/\s+-\s+/g, ' - ');
     s = s.replace(/^[0-9]{1,3}[\s.\-_]+/, '');
     s = s.replace(/\s*-\s*[0-9]{2,3}\s*bpm/gi, '');
     s = s.replace(/\s*[\(\[][^^\)\]]*[\)\]]/g, '');
@@ -1074,9 +1076,13 @@ var METADATA_IGNORE_BLACKLIST = [
       var resolvedSong = cleanupMetadataChunk(chosenBase.song);
       var resolvedCover = (bestInfo && bestInfo.cover) || (fallbackItunes && fallbackItunes.cover) || '';
 
-      if (bestInfo && bestInfo.artistScore >= 0.68 && bestInfo.resultArtist) {
+      var originalArtist = cleanupMetadataChunk(chosenBase.artist);
+      var originalSong = cleanupMetadataChunk(chosenBase.song);
+      var preserveStructuredArtist = !!(originalArtist && originalSong && compactComparable(originalArtist).length >= 2);
+
+      if (!preserveStructuredArtist && bestInfo && bestInfo.artistScore >= 0.68 && bestInfo.resultArtist) {
         resolvedArtist = cleanupMetadataChunk(bestInfo.resultArtist);
-      } else if (fallbackItunes && fallbackItunes.artistScore >= 0.68 && fallbackItunes.resultArtist) {
+      } else if (!preserveStructuredArtist && fallbackItunes && fallbackItunes.artistScore >= 0.68 && fallbackItunes.resultArtist) {
         resolvedArtist = cleanupMetadataChunk(fallbackItunes.resultArtist);
       }
 
@@ -1084,6 +1090,10 @@ var METADATA_IGNORE_BLACKLIST = [
         resolvedSong = cleanupMetadataChunk(bestInfo.resultSong);
       } else if (fallbackItunes && fallbackItunes.songScore >= 0.82 && fallbackItunes.resultSong) {
         resolvedSong = cleanupMetadataChunk(fallbackItunes.resultSong);
+      }
+
+      if (preserveStructuredArtist) {
+        resolvedArtist = originalArtist;
       }
 
       var rawParts = (immediate.parts || []).map(cleanupMetadataChunk).filter(Boolean);
