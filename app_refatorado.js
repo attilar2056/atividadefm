@@ -9,9 +9,6 @@
   var PROGRAMS_URL = 'programas/programacao.json';
   var COMMERCIALS_URL = 'programas/comercial.json';
 
-  // O stream principal agora é fixo 24h/7 no Zeno.
-  // 'A Voz do Brasil' só aparece no card de metadados quando o termo vier do comercial.json / lista de comerciais.
-
   // Blacklist de metadados: se o texto do stream contiver algum termo abaixo,
   // o player ignora esse metadado e mantém a capa/título anterior.
   // Adicione novas frases aqui quando aparecerem metadados técnicos ou indesejados.
@@ -496,25 +493,21 @@ var METADATA_IGNORE_BLACKLIST = [
     return current;
   }
 
-  function getDesiredStreamUrl() {
-    return DEFAULT_STREAM_URL;
+  function isVoiceWeekday() {
+    return false;
   }
 
-  function switchStreamIfNeeded() {
-    if (!app.audio) return;
-    var desired = getDesiredStreamUrl();
-    var current = String(app.audio.getAttribute('data-current-stream') || app.audio.src || '').trim();
-    if (current && current.indexOf(desired) !== -1) return;
-    var wasPlaying = !app.audio.paused && !app.audio.ended;
-    app.audio.setAttribute('data-loading', '1');
-    app.audio.setAttribute('data-current-stream', desired);
-    app.audio.src = desired;
-    try { app.audio.load(); } catch (_error) {}
-    if (wasPlaying) {
-      var p = app.audio.play();
-      if (p && typeof p.catch === 'function') p.catch(function () {});
-    }
-    syncPlayerUi();
+  function isVoiceWindow() {
+    return false;
+  }
+
+  function fetchVoiceState() {
+    app.voiceActive = false;
+    return Promise.resolve(false);
+  }
+
+  function getDesiredStreamUrl() {
+    return DEFAULT_STREAM_URL;
   }
 
   function updateSliderAppearance(slider) {
@@ -896,8 +889,7 @@ var METADATA_IGNORE_BLACKLIST = [
     var subLine = safeText(card && (card.subtitle || card.artist || '')).trim();
     if (!mainLine) mainLine = 'ATIVIDADE FM';
     if (cover) setFreshImageSource(cover, card.cover || app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png', {
-      fallback: app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png',
-      force: true
+      fallback: app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png'
     });
     if (song) song.textContent = mainLine;
     if (artist) {
@@ -1507,6 +1499,48 @@ var METADATA_IGNORE_BLACKLIST = [
 
   function syncMetadataOverride() {
     return false;
+  }
+
+  function handleIncomingStreamMetadata(rawTitle, options) {
+    options = options || {};
+    var raw = safeText(rawTitle).trim();
+    if (!raw) return;
+    if (syncMetadataOverride()) return;
+
+    if (handleBlacklistedMetadata(raw, options)) return;
+
+    var commercialInfo = findCommercialMetadata(raw);
+    if (commercialInfo) {
+      handleIncomingCommercialMetadata(raw, commercialInfo, { forceRender: !!options.forceRender });
+      return;
+    }
+
+    if (app.lastMetadataRaw === raw && app.currentTrack && !app.currentTrack.pendingRefresh && app.displayedMetadataKind === 'music' && !app.awaitingMusicAfterCommercial) {
+      return;
+    }
+
+    if (isUiActive() || options.forceRender) {
+      renderTrackMetadata(raw, { forceRender: true, forceSearch: true, holdMs: 15000 });
+    } else {
+      var fromCommercialContext = app.displayedMetadataKind === 'commercial'
+        || app.pendingMetadataKind === 'commercial'
+        || app.pendingCommercialQueue.length > 0
+        || app.awaitingMusicAfterCommercial
+        || !!(app.currentTrack && app.currentTrack.commercial);
+
+      if (fromCommercialContext) {
+        app.pendingCommercialQueue = [];
+        app.awaitingMusicAfterCommercial = true;
+        clearPendingMetadataState();
+      }
+
+      app.currentTrack = buildTrackCardFromRaw(raw, currentProgramCard().cover);
+      app.currentTrack.pendingRefresh = true;
+      app.lastMetadataRaw = raw;
+      app.pendingMetadataKind = 'music';
+      app.pendingMetadataRaw = raw;
+      app.pendingTrackRevealAt = Date.now() + 15000;
+    }
   }
 
   function connectMetadata() {
@@ -2172,7 +2206,7 @@ var METADATA_IGNORE_BLACKLIST = [
 
   function runStreamTick() {
     switchStreamIfNeeded();
-    if (!app.currentTrack) renderMetadataCard(currentProgramCard());
+    if (!app.currentTrack && !app.pendingMetadataKind) renderMetadataCard(currentProgramCard());
   }
 
   function boot() {
