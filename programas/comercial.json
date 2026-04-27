@@ -41,6 +41,11 @@
       "image": "assets/uploads/baixados.jpg"
     },
     {
+      "id": "off_toca_do_bugre",
+      "title": "Comercial Toca do bugre",
+      "image": "assets/uploads/toca.jpg"
+    },
+    {
       "id": "oracao_bp",
       "title": "Oração com Bispo Edinaldo",
       "image": "assets/uploads/1777324170544_Podcast_1.jpg"
@@ -66,9 +71,9 @@
       "image": "assets/uploads/1777319757996_images_1.png"
     },
     {
-      "id": "off_toca_do_bugre",
-      "title": "Comercial Toca do bugre",
-      "image": "assets/uploads/toca.jpg"
+      "id": "stream",
+      "title": "A Voz do Brasil",
+      "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg"
     }
   ]
 }
