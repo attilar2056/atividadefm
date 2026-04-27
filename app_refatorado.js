@@ -3,13 +3,14 @@
   'use strict';
 
   var DEFAULT_STREAM_URL = 'https://stream.zeno.fm/zh7jkchfce4uv';
-  var VOZ_STREAM_URL = 'http://radioaovivo.senado.gov.br/canal2.mp3';
   var TIMEZONE = 'America/Sao_Paulo';
   var TIME_API = 'https://time.now/developer/api/timezone/' + TIMEZONE;
   var WEATHER_API = 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current_weather=true&timezone=America/Sao_Paulo';
-  var VOZ_STATE_URL = 'voz.json';
   var PROGRAMS_URL = 'programas/programacao.json';
   var COMMERCIALS_URL = 'programas/comercial.json';
+
+  // O stream principal agora é fixo 24h/7 no Zeno.
+  // 'A Voz do Brasil' só aparece no card de metadados quando o termo vier do comercial.json / lista de comerciais.
 
   // Blacklist de metadados: se o texto do stream contiver algum termo abaixo,
   // o player ignora esse metadado e mantém a capa/título anterior.
@@ -495,36 +496,25 @@ var METADATA_IGNORE_BLACKLIST = [
     return current;
   }
 
-  function isVoiceWeekday(clock) {
-    var wd = (clock || getClockContext()).weekday;
-    return wd === 'seg' || wd === 'ter' || wd === 'quar' || wd === 'qui' || wd === 'sex';
+  function getDesiredStreamUrl() {
+    return DEFAULT_STREAM_URL;
   }
 
-  function isVoiceWindow(clock) {
-    var ctx = clock || getClockContext();
-    return isVoiceWeekday(ctx) && ctx.minutes >= (19 * 60) && ctx.minutes <= ((19 * 60) + 59);
-  }
-
-  function fetchVoiceState() {
-    if (!isVoiceWindow(getClockContext())) {
-      app.voiceActive = false;
-      return Promise.resolve(false);
+  function switchStreamIfNeeded() {
+    if (!app.audio) return;
+    var desired = getDesiredStreamUrl();
+    var current = String(app.audio.getAttribute('data-current-stream') || app.audio.src || '').trim();
+    if (current && current.indexOf(desired) !== -1) return;
+    var wasPlaying = !app.audio.paused && !app.audio.ended;
+    app.audio.setAttribute('data-loading', '1');
+    app.audio.setAttribute('data-current-stream', desired);
+    app.audio.src = desired;
+    try { app.audio.load(); } catch (_error) {}
+    if (wasPlaying) {
+      var p = app.audio.play();
+      if (p && typeof p.catch === 'function') p.catch(function () {});
     }
-    return fetch(buildNoCacheUrl(VOZ_STATE_URL), { cache: 'no-store' }).then(function (res) {
-      if (!res.ok) throw new Error('voz.json');
-      return res.text();
-    }).then(function (text) {
-      var parsed = text;
-      try { parsed = JSON.parse(text); } catch (_error) {}
-      app.voiceActive = !!readVoiceStateFromPayload(parsed);
-      return app.voiceActive;
-    }).catch(function () {
-      return app.voiceActive;
-    });
-  }
-
-  function getDesiredStreamUrl(clock) {
-    return (isVoiceWindow(clock) && app.voiceActive) ? VOZ_STREAM_URL : DEFAULT_STREAM_URL;
+    syncPlayerUi();
   }
 
   function updateSliderAppearance(slider) {
@@ -1516,58 +1506,7 @@ var METADATA_IGNORE_BLACKLIST = [
   }
 
   function syncMetadataOverride() {
-    if (!app.metadataHost) return;
-    if (isVoiceWindow(getClockContext()) && app.voiceActive) {
-      app.pendingCommercialQueue = [];
-      app.awaitingMusicAfterCommercial = false;
-      clearPendingMetadataState();
-      app.displayedMetadataKind = 'program';
-      renderMetadataCard(voiceProgramCard());
-      return true;
-    }
     return false;
-  }
-
-  function handleIncomingStreamMetadata(rawTitle, options) {
-    options = options || {};
-    var raw = safeText(rawTitle).trim();
-    if (!raw) return;
-    if (syncMetadataOverride()) return;
-
-    if (handleBlacklistedMetadata(raw, options)) return;
-
-    var commercialInfo = findCommercialMetadata(raw);
-    if (commercialInfo) {
-      handleIncomingCommercialMetadata(raw, commercialInfo, { forceRender: !!options.forceRender });
-      return;
-    }
-
-    if (app.lastMetadataRaw === raw && app.currentTrack && !app.currentTrack.pendingRefresh && app.displayedMetadataKind === 'music' && !app.awaitingMusicAfterCommercial) {
-      return;
-    }
-
-    if (isUiActive() || options.forceRender) {
-      renderTrackMetadata(raw, { forceRender: true, forceSearch: true, holdMs: 15000 });
-    } else {
-      var fromCommercialContext = app.displayedMetadataKind === 'commercial'
-        || app.pendingMetadataKind === 'commercial'
-        || app.pendingCommercialQueue.length > 0
-        || app.awaitingMusicAfterCommercial
-        || !!(app.currentTrack && app.currentTrack.commercial);
-
-      if (fromCommercialContext) {
-        app.pendingCommercialQueue = [];
-        app.awaitingMusicAfterCommercial = true;
-        clearPendingMetadataState();
-      }
-
-      app.currentTrack = buildTrackCardFromRaw(raw, currentProgramCard().cover);
-      app.currentTrack.pendingRefresh = true;
-      app.lastMetadataRaw = raw;
-      app.pendingMetadataKind = 'music';
-      app.pendingMetadataRaw = raw;
-      app.pendingTrackRevealAt = Date.now() + 15000;
-    }
   }
 
   function connectMetadata() {
@@ -2232,11 +2171,8 @@ var METADATA_IGNORE_BLACKLIST = [
   }
 
   function runStreamTick() {
-    fetchVoiceState().then(function () {
-      switchStreamIfNeeded();
-      if (syncMetadataOverride()) return;
-      if (!app.currentTrack) renderMetadataCard(currentProgramCard());
-    });
+    switchStreamIfNeeded();
+    if (!app.currentTrack) renderMetadataCard(currentProgramCard());
   }
 
   function boot() {
@@ -2256,11 +2192,9 @@ var METADATA_IGNORE_BLACKLIST = [
     }).then(function () {
       renderScheduleDependentUi();
       fetchWeather();
-      fetchVoiceState().then(function () {
-        switchStreamIfNeeded();
-        connectMetadata();
-        if (!syncMetadataOverride()) renderMetadataCard(currentProgramCard());
-      });
+      switchStreamIfNeeded();
+      connectMetadata();
+      renderMetadataCard(currentProgramCard());
     });
 
     app.uiTickTimer = setInterval(runUiTick, 1000);
