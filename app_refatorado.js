@@ -32,6 +32,7 @@ var METADATA_IGNORE_BLACKLIST = [
   'charm ea qui',
   'ta gostando 106',
   'vinheta - trimega',
+  'a partir de agora',
   'chamd class da disco',
   'vinheta - trimega-3-na-sequencia',
   'locução de hora',
@@ -41,10 +42,12 @@ var METADATA_IGNORE_BLACKLIST = [
   'muito mais musicas 106,1',
   'ta  afim de passar um zap',
   'boa tarde ooooi',
+  'daqui pouco vc vai  ficar',
   'se vc nao consegue 106 ouvir',
   'DAQUI A POUCO O SUCESSO ESTA DE VOLTA',
   'Prefixo  Esperança FM  1061 MHz  Boa ViagemCE',
   'pass 01',
+  'final  novo  seg a qinta',
   'ola vc ta 106.1'
 ];
 
@@ -53,6 +56,9 @@ var METADATA_IGNORE_BLACKLIST = [
   // Se o id não existir no JSON, o player usa o nome original do metadado e a logo da rádio.
   var COMMERCIAL_METADATA_LIST = [
     { id: 'canelinha', terms: ['canelinha'] },
+    { id: 'oraçao_bp', terms: ['oraçao bp', 'oraçao bp'] },
+    { id: 'radios_net', terms: ['RadiosNet_Quer-ouvir-nossa-radio_MASC'] },
+    { id: 'oraçao_bp', terms: ['oraçao bp', 'oraçao bp'] },
     { id: 'oraçao_bp', terms: ['oraçao bp', 'oraçao bp'] },
     { id: 'gezin_regularizacao', terms: ['gezin regularização', 'gezin regularizacao'] },
     { id: 'real_px_voz', terms: ['real px voz'] },
@@ -70,7 +76,9 @@ var METADATA_IGNORE_BLACKLIST = [
     { id: 'AUD_20260108_WA0300.', terms: ['AUD-20260108-WA0300.'] },
     { id: 'OFF_toca_do_bugre', terms: ['OFF toca do bugre'] },
     { id: 'postes', terms: ['postes'] },
+    { id: 'sume_salgados', terms: ['sume salgados'] },
     { id: 'OFF_MAMAE_FESTEIRA_1', terms: ['OFF MAMAE FESTEIRA 1'] },
+    { id: 'OFF_MAMAE_FESTEIRA_2', terms: ['OFF MAMAE FESTEIRA 2'] },
     { id: 'spot_hellos_auto_center', terms: ['spot hellos auto center', 'hellos auto center'] },
     { id: 'comercial_eletronica_jpa', terms: ['comercial eletronica jpa', 'comercial eletrônica jpa', 'eletronica jpa', 'eletrônica jpa'] },
     { id: 'faculdade_infrain', terms: ['f@culd@de infr@in', 'faculdade infrain'] },
@@ -1505,7 +1513,7 @@ var METADATA_IGNORE_BLACKLIST = [
       app.pendingCommercialQueue.push({
         rawTitle: raw,
         commercialInfo: commercialInfo || null,
-        delayMs: 20000
+        delayMs: 15000
       });
       return;
     }
@@ -1514,7 +1522,7 @@ var METADATA_IGNORE_BLACKLIST = [
       app.pendingCommercialQueue.push({
         rawTitle: raw,
         commercialInfo: commercialInfo || null,
-        delayMs: 20000
+        delayMs: 15000
       });
       if (currentIsCommercial) {
         scheduleNextQueuedCommercial({ forceRender: options.forceRender });
@@ -1523,7 +1531,7 @@ var METADATA_IGNORE_BLACKLIST = [
     }
 
     scheduleCommercialReveal(raw, commercialInfo, {
-      delayMs: 20000,
+      delayMs: 15000,
       forceRender: options.forceRender,
       holdMode: app.blacklistHoldActive ? 'keep-current' : 'program'
     });
@@ -1790,7 +1798,7 @@ var METADATA_IGNORE_BLACKLIST = [
     if (!candidate) return false;
 
     var elapsed = Date.now() - Number(candidate.startedAt || 0);
-    if (elapsed < 20000) return false;
+    if (elapsed < 15000) return false;
 
     displayStableMetadata(candidate, { forceRender: options.forceRender !== false });
     return true;
@@ -1802,7 +1810,7 @@ var METADATA_IGNORE_BLACKLIST = [
     var candidate = app.stableMetadataCandidate;
     if (!candidate) return;
 
-    var remaining = Number(candidate.startedAt || Date.now()) + 20000 - Date.now();
+    var remaining = Number(candidate.startedAt || Date.now()) + 15000 - Date.now();
     app.stableMetadataTimer = setTimeout(function () {
       app.stableMetadataTimer = null;
       promoteStableCandidateIfReady({ forceRender: true });
@@ -1868,7 +1876,7 @@ var METADATA_IGNORE_BLACKLIST = [
     app.pendingMetadataKind = normalizedKind;
     app.pendingMetadataRaw = raw;
     app.pendingCommercialInfo = commercialInfo || null;
-    app.pendingTrackRevealAt = now + 20000;
+    app.pendingTrackRevealAt = now + 15000;
     app.pendingHoldMode = (normalizedKind === 'commercial' && getDisplayedMetadataKind() === 'commercial') ? 'keep-current' : 'program';
 
     rememberLastValidCandidate(candidate);
@@ -2020,7 +2028,7 @@ var METADATA_IGNORE_BLACKLIST = [
       fetch(url).then(function (res) { return res.json(); }).then(function (data) {
         state.items = Array.isArray(data && data.items) ? data.items.slice(0, 8) : [];
         if (!state.items.length) throw new Error('sem notícias');
-        state.nextRotateAt = Date.now() + 20000;
+        state.nextRotateAt = Date.now() + 15000;
         renderNewsState(state);
       }).catch(function () {
         list.textContent = 'Erro ao carregar';
@@ -2069,7 +2077,7 @@ var METADATA_IGNORE_BLACKLIST = [
         overlay.setAttribute('aria-label', 'Abrir banner');
         host.appendChild(overlay);
       }
-      var state = { items: items, links: Array.isArray(links) ? links : [], index: 0, nextRotateAt: Date.now() + 20000, img: img, overlay: overlay, host: host };
+      var state = { items: items, links: Array.isArray(links) ? links : [], index: 0, nextRotateAt: Date.now() + 15000, img: img, overlay: overlay, host: host };
       host.__bannerState = state;
       renderBannerState(state);
     });
@@ -2102,7 +2110,7 @@ var METADATA_IGNORE_BLACKLIST = [
       if (now < state.nextRotateAt) return;
       state.index += state.perView;
       if (state.index >= state.items.length) state.index = 0;
-      state.nextRotateAt = now + 20000;
+      state.nextRotateAt = now + 15000;
       renderNewsState(state);
     });
     app.bannerHosts.forEach(function (host) {
@@ -2110,7 +2118,7 @@ var METADATA_IGNORE_BLACKLIST = [
       if (!state || state.items.length <= 1) return;
       if (now < state.nextRotateAt) return;
       state.index = (state.index + 1) % state.items.length;
-      state.nextRotateAt = now + 20000;
+      state.nextRotateAt = now + 15000;
       renderBannerState(state);
     });
   }
