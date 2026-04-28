@@ -1,6 +1,11 @@
 {
   "comerciais": [
     {
+      "id": "alex_alves",
+      "title": "Locutor Alex Alves",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg"
+    },
+    {
       "id": "anuncie_nova",
       "title": "Anuncie na Rádio",
       "image": "assets/uploads/anuncie.jpg"
@@ -16,9 +21,34 @@
       "image": "assets/uploads/images.jpg"
     },
     {
+      "id": "chamada_do_insonia",
+      "title": "Chamada do Insonia",
+      "image": "assets/uploads/insonia.jpg"
+    },
+    {
+      "id": "chamd_atila",
+      "title": "Chamada Top Hits 2ª edição",
+      "image": "assets/uploads/1777400891960_top2.jpg"
+    },
+    {
+      "id": "chamd_class_da_disco",
+      "title": "Chamada Classicos da Disco",
+      "image": "assets/uploads/1777398766048_classiscos.jpg"
+    },
+    {
+      "id": "chamd_mm",
+      "title": "Chamada Top Hits",
+      "image": "assets/uploads/1777401062148_top.jpg"
+    },
+    {
       "id": "comercial_eletronica_jpa",
       "title": "Comercial Eletrônica Jacarepaguá",
       "image": "assets/uploads/1777320938504_Design_sem_nome.jpg"
+    },
+    {
+      "id": "cxradio_feminino_1",
+      "title": "Comercial Cx Radios",
+      "image": "assets/uploads/1777400393722_cx.jpg"
     },
     {
       "id": "daniel_apvs",
@@ -46,6 +76,11 @@
       "image": "assets/uploads/baixados.jpg"
     },
     {
+      "id": "off_mamae_festeira_2",
+      "title": "Comercial Mamãe Festeira",
+      "image": "assets/uploads/baixados.jpg"
+    },
+    {
       "id": "off_toca_do_bugre",
       "title": "Comercial Toca do bugre",
       "image": "assets/uploads/toca.jpg"
@@ -59,6 +94,11 @@
       "id": "pgm_02",
       "title": "Bispo Edinaldo Silva",
       "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg"
+    },
+    {
+      "id": "postes",
+      "title": "Comercial Fabrica de postes Ligação",
+      "image": "assets/uploads/logo-postes-ligacao.png"
     },
     {
       "id": "real_pax_1",
@@ -76,6 +116,11 @@
       "image": "assets/uploads/LOGO-REAL-PAX-MAIS-DE-70-ANOS-FINALIZADA.webp"
     },
     {
+      "id": "spot_grafica_gift_store_online",
+      "title": "Comercial Gráfica Gift Store",
+      "image": "assets/uploads/1777399713331_gift.jpg"
+    },
+    {
       "id": "spot_hellos_auto_center",
       "title": "Comercial Hellos Auto Center",
       "image": "assets/uploads/1777319757996_images_1.png"
@@ -84,11 +129,6 @@
       "id": "stream",
       "title": "A Voz do Brasil",
       "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg"
-    },
-    {
-      "id": "chamada_do_insonia",
-      "title": "Chamada do Insonia",
-      "image": "assets/uploads/insonia.jpg"
     }
   ]
 }
