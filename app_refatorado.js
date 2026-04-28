@@ -877,12 +877,29 @@ var METADATA_IGNORE_BLACKLIST = [
 
   function renderMetadataCard(card) {
     if (!app.metadataHost) return;
+
+    var defaultCover = app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png';
+    var mainLine = safeText(card && (card.displayTitle || card.song || card.title || '')).trim();
+    var subLine = safeText(card && (card.subtitle || card.artist || '')).trim();
+    var coverSrc = safeText(card && card.cover || defaultCover).trim() || defaultCover;
+    var rawTitle = safeText(card && card.rawTitle).trim();
+    var isProgramCard = !rawTitle && !(card && card.commercial);
+    if (!mainLine) mainLine = 'ATIVIDADE FM';
+
+    var renderKey = [isProgramCard ? 'program' : 'metadata', mainLine, subLine, coverSrc].join('||');
     var root = app.metadataHost.querySelector('.re-radio-metadata-shell');
+
+    if (isProgramCard && root && root.getAttribute('data-render-key') === renderKey) {
+      return;
+    }
+
     if (!root) {
       app.metadataHost.innerHTML = '<div class="re-radio-metadata-shell">A voz do Brasil</div>';
       root = app.metadataHost.querySelector('.re-radio-metadata-shell');
     }
     if (!root) return;
+
+    root.setAttribute('data-render-key', renderKey);
     root.innerHTML = '' +
       '<div class="urm-widget">' +
         '<div class="urm-cover-wrap"><img class="urm-cover" alt="Capa" /></div>' +
@@ -894,11 +911,8 @@ var METADATA_IGNORE_BLACKLIST = [
     var cover = root.querySelector('.urm-cover');
     var song = root.querySelector('.urm-song');
     var artist = root.querySelector('.urm-artist');
-    var mainLine = safeText(card && (card.displayTitle || card.song || card.title || '')).trim();
-    var subLine = safeText(card && (card.subtitle || card.artist || '')).trim();
-    if (!mainLine) mainLine = 'ATIVIDADE FM';
-    if (cover) setFreshImageSource(cover, card.cover || app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png', {
-      fallback: app.metadataHost.getAttribute('data-default-cover') || 'assets/base/logo.png',
+    if (cover) setFreshImageSource(cover, coverSrc, {
+      fallback: defaultCover,
       force: true
     });
     if (song) song.textContent = mainLine;
@@ -1511,86 +1525,255 @@ var METADATA_IGNORE_BLACKLIST = [
     return true;
   }
 
-  function renderTrackMetadata(rawTitle, options) {
-    options = options || {};
-    var raw = safeText(rawTitle).trim();
-    if (!raw) return;
-    if (handleBlacklistedMetadata(raw, options)) return;
+  function stableMetadataKindFromCandidate(candidate) {
+    return candidate && candidate.kind === 'commercial' ? 'commercial' : 'music';
+  }
 
-    var commercialInfo = findCommercialMetadata(raw);
-    if (commercialInfo) {
-      handleIncomingCommercialMetadata(raw, commercialInfo, options);
+  function stableMetadataKey(kind, rawTitle) {
+    return safeText(kind).trim() + '::' + safeText(rawTitle).trim();
+  }
+
+  function cloneStableMetadataCandidate(candidate) {
+    if (!candidate || typeof candidate !== 'object') return null;
+    var raw = safeText(candidate.rawTitle).trim();
+    if (!raw) return null;
+    var kind = stableMetadataKindFromCandidate(candidate);
+    return {
+      kind: kind,
+      rawTitle: raw,
+      commercialInfo: candidate.commercialInfo || null,
+      key: stableMetadataKey(kind, raw),
+      startedAt: Number(candidate.startedAt || 0) || Date.now()
+    };
+  }
+
+  function getDisplayedMetadataKind() {
+    if (app.displayedMetadataKind === 'commercial' && app.currentTrack && app.currentTrack.commercial) return 'commercial';
+    if (app.displayedMetadataKind === 'music' && app.currentTrack && !app.currentTrack.commercial) return 'music';
+    return 'program';
+  }
+
+  function getDisplayedMetadataKey() {
+    var kind = getDisplayedMetadataKind();
+    if (kind === 'program' || !app.currentTrack) return '';
+    return stableMetadataKey(kind, app.currentTrack.rawTitle);
+  }
+
+  function clearStableMetadataTimer() {
+    if (app.stableMetadataTimer) {
+      clearTimeout(app.stableMetadataTimer);
+      app.stableMetadataTimer = null;
+    }
+  }
+
+  function clearStableForceTimer() {
+    if (app.stableForceTimer) {
+      clearTimeout(app.stableForceTimer);
+      app.stableForceTimer = null;
+    }
+  }
+
+  function clearStableCandidate(options) {
+    options = options || {};
+    clearStableMetadataTimer();
+    app.stableMetadataCandidate = null;
+    if (!options.keepForceTimer) {
+      clearStableForceTimer();
+      app.stableUnstableSince = 0;
+    }
+    app.pendingTrackRevealAt = 0;
+    app.pendingMetadataKind = '';
+    app.pendingMetadataRaw = '';
+    app.pendingCommercialInfo = null;
+    app.pendingHoldMode = '';
+    app.pendingCommercialQueue = [];
+  }
+
+  function rememberLastValidCandidate(candidate) {
+    var cloned = cloneStableMetadataCandidate(candidate);
+    if (cloned) app.lastValidMetadataCandidate = cloned;
+  }
+
+  function renderStableTransition(candidate, options) {
+    options = options || {};
+    var currentKind = getDisplayedMetadataKind();
+
+    if (candidate && candidate.kind === 'commercial' && currentKind === 'commercial' && app.currentTrack) {
+      if (isUiActive() || options.forceRender) renderMetadataCard(app.currentTrack);
       return;
     }
 
-    var fromCommercialContext = app.displayedMetadataKind === 'commercial'
-      || app.pendingMetadataKind === 'commercial'
-      || app.pendingCommercialQueue.length > 0
-      || app.awaitingMusicAfterCommercial
-      || !!(app.currentTrack && app.currentTrack.commercial);
-
-    if (fromCommercialContext) {
-      app.pendingCommercialQueue = [];
-      app.awaitingMusicAfterCommercial = true;
-      app.metadataRequestId += 1;
-      clearPendingMetadataState();
+    if (isUiActive() || options.forceRender) {
+      renderProgramMetadataCard({ forceRender: options.forceRender, keepTrack: true });
     }
+  }
 
-    var fromBlacklistContext = !!app.blacklistHoldActive;
-    var isNewTrack = app.lastMetadataRaw !== raw;
-    var immediateCard = buildTrackCardFromRaw(raw, currentProgramCard().cover);
-    immediateCard.pendingRefresh = true;
-    app.currentTrack = immediateCard;
-    app.lastMetadataRaw = raw;
-
-    if (isNewTrack || fromCommercialContext || fromBlacklistContext) {
-      scheduleTrackReveal(raw, {
-        delayMs: Number.isFinite(options.holdMs) ? options.holdMs : 15000,
-        forceRender: !!options.forceRender,
-        showProgram: !fromBlacklistContext,
-        holdMode: fromBlacklistContext ? 'keep-current' : 'program'
-      });
-    } else if (app.pendingTrackRevealAt && Date.now() < app.pendingTrackRevealAt) {
-      if (isUiActive() || options.forceRender) renderMetadataCard(currentProgramCard());
-    } else if (isUiActive() || options.forceRender) {
-      app.displayedMetadataKind = 'music';
-      renderMetadataCard(immediateCard);
-    }
-
-    if (!isUiActive() && !options.forceSearch) return;
+  function refreshStableMusicDetails(rawTitle, options) {
+    options = options || {};
+    var raw = safeText(rawTitle).trim();
+    if (!raw) return;
 
     var requestId = ++app.metadataRequestId;
     resolveTrackMetadata(raw).then(function (resolved) {
       if (requestId !== app.metadataRequestId) return;
-      if (app.lastMetadataRaw !== raw && app.pendingMetadataRaw !== raw) return;
-      var finalCard = buildTrackCardFromRaw(raw, resolved.cover || currentProgramCard().cover, {
+      if (!app.currentTrack || app.currentTrack.commercial || app.displayedMetadataKind !== 'music') return;
+      if (safeText(app.currentTrack.rawTitle).trim() !== raw) return;
+
+      var finalCard = buildTrackCardFromRaw(raw, (resolved && resolved.cover) || currentProgramCard().cover, {
         rawTitle: raw,
-        song: resolved.song,
-        artist: resolved.artist
+        song: resolved && resolved.song,
+        artist: resolved && resolved.artist
       });
       finalCard.pendingRefresh = false;
       app.currentTrack = finalCard;
-      if (!app.pendingTrackRevealAt || Date.now() >= app.pendingTrackRevealAt) {
-        app.awaitingMusicAfterCommercial = false;
-        app.blacklistHoldActive = false;
-        app.displayedMetadataKind = 'music';
-        rememberStableDisplayedCard(finalCard, 'music');
-        if (isUiActive() || options.forceRender) renderMetadataCard(finalCard);
-      }
+      rememberStableDisplayedCard(finalCard, 'music');
+
+      // Metadado precisa atualizar mesmo sem foco, pois pode estar sendo capturado em segundo plano.
+      renderMetadataCard(finalCard);
     }).catch(function () {
       if (requestId !== app.metadataRequestId) return;
-      if (app.lastMetadataRaw !== raw && app.pendingMetadataRaw !== raw) return;
-      var fallbackCard = buildTrackCardFromRaw(raw, currentProgramCard().cover);
-      fallbackCard.pendingRefresh = false;
-      app.currentTrack = fallbackCard;
-      if (!app.pendingTrackRevealAt || Date.now() >= app.pendingTrackRevealAt) {
-        app.awaitingMusicAfterCommercial = false;
-        app.blacklistHoldActive = false;
-        app.displayedMetadataKind = 'music';
-        rememberStableDisplayedCard(fallbackCard, 'music');
-        if (isUiActive() || options.forceRender) renderMetadataCard(fallbackCard);
-      }
+      if (!app.currentTrack || app.currentTrack.commercial || app.displayedMetadataKind !== 'music') return;
+      if (safeText(app.currentTrack.rawTitle).trim() !== raw) return;
+      app.currentTrack.pendingRefresh = false;
+      rememberStableDisplayedCard(app.currentTrack, 'music');
+      renderMetadataCard(app.currentTrack);
     });
+  }
+
+  function displayStableMetadata(candidate, options) {
+    options = options || {};
+    var stable = cloneStableMetadataCandidate(candidate);
+    if (!stable || !stable.rawTitle) return;
+
+    clearStableCandidate({ keepForceTimer: false });
+    app.blacklistHoldActive = false;
+    app.awaitingMusicAfterCommercial = false;
+    app.lastMetadataRaw = stable.rawTitle;
+
+    if (stable.kind === 'commercial') {
+      revealCommercialNow(stable.rawTitle, stable.commercialInfo, { forceRender: options.forceRender !== false });
+      return;
+    }
+
+    revealTrackNow(stable.rawTitle, { forceRender: options.forceRender !== false });
+    refreshStableMusicDetails(stable.rawTitle);
+  }
+
+  function promoteStableCandidateIfReady(options) {
+    options = options || {};
+    var candidate = app.stableMetadataCandidate;
+    if (!candidate) return false;
+
+    var elapsed = Date.now() - Number(candidate.startedAt || 0);
+    if (elapsed < 15000) return false;
+
+    displayStableMetadata(candidate, { forceRender: options.forceRender !== false });
+    return true;
+  }
+
+  function scheduleStablePromotion(options) {
+    options = options || {};
+    clearStableMetadataTimer();
+    var candidate = app.stableMetadataCandidate;
+    if (!candidate) return;
+
+    var remaining = Number(candidate.startedAt || Date.now()) + 15000 - Date.now();
+    app.stableMetadataTimer = setTimeout(function () {
+      app.stableMetadataTimer = null;
+      promoteStableCandidateIfReady({ forceRender: true });
+    }, Math.max(0, remaining));
+  }
+
+  function forceLastValidMetadataCandidate(options) {
+    options = options || {};
+    var candidate = cloneStableMetadataCandidate(app.lastValidMetadataCandidate || app.stableMetadataCandidate);
+    if (!candidate) return;
+    displayStableMetadata(candidate, { forceRender: options.forceRender !== false });
+  }
+
+  function scheduleStableForceReveal(options) {
+    options = options || {};
+    clearStableForceTimer();
+    if (!app.stableUnstableSince || !app.lastValidMetadataCandidate) return;
+
+    var remaining = Number(app.stableUnstableSince || Date.now()) + 30000 - Date.now();
+    app.stableForceTimer = setTimeout(function () {
+      app.stableForceTimer = null;
+      forceLastValidMetadataCandidate({ forceRender: true });
+    }, Math.max(0, remaining));
+  }
+
+  function startStableMetadataCandidate(kind, rawTitle, commercialInfo, options) {
+    options = options || {};
+    var raw = safeText(rawTitle).trim();
+    if (!raw) return;
+
+    var normalizedKind = kind === 'commercial' ? 'commercial' : 'music';
+    var key = stableMetadataKey(normalizedKind, raw);
+
+    if (getDisplayedMetadataKey() === key && !app.stableMetadataCandidate) {
+      app.lastMetadataRaw = raw;
+      return;
+    }
+
+    if (app.stableMetadataCandidate && app.stableMetadataCandidate.key === key) {
+      rememberLastValidCandidate(app.stableMetadataCandidate);
+      if (!promoteStableCandidateIfReady(options)) {
+        renderStableTransition(app.stableMetadataCandidate, options);
+        scheduleStablePromotion(options);
+        scheduleStableForceReveal(options);
+      }
+      return;
+    }
+
+    clearStableCandidate({ keepForceTimer: true });
+    app.metadataRequestId += 1;
+
+    var now = Date.now();
+    var candidate = {
+      kind: normalizedKind,
+      rawTitle: raw,
+      commercialInfo: commercialInfo || null,
+      key: key,
+      startedAt: now
+    };
+
+    app.stableMetadataCandidate = candidate;
+    app.lastMetadataRaw = raw;
+    app.pendingMetadataKind = normalizedKind;
+    app.pendingMetadataRaw = raw;
+    app.pendingCommercialInfo = commercialInfo || null;
+    app.pendingTrackRevealAt = now + 15000;
+    app.pendingHoldMode = (normalizedKind === 'commercial' && getDisplayedMetadataKind() === 'commercial') ? 'keep-current' : 'program';
+
+    rememberLastValidCandidate(candidate);
+    if (!app.stableUnstableSince) app.stableUnstableSince = now;
+
+    renderStableTransition(candidate, options);
+    scheduleStablePromotion(options);
+    scheduleStableForceReveal(options);
+  }
+
+  function handleStableBlacklistedMetadata(rawTitle, options) {
+    options = options || {};
+    var raw = safeText(rawTitle).trim();
+    if (!raw || !isMetadataBlacklisted(raw)) return false;
+
+    app.blacklistHoldActive = true;
+
+    if (app.stableMetadataCandidate) {
+      renderStableTransition(app.stableMetadataCandidate, options);
+    } else if (app.currentTrack && app.currentTrack.rawTitle) {
+      if (isUiActive() || options.forceRender) renderMetadataCard(app.currentTrack);
+    } else if (isUiActive() || options.forceRender) {
+      renderMetadataCard(currentProgramCard());
+    }
+
+    return true;
+  }
+
+  function renderTrackMetadata(rawTitle, options) {
+    handleIncomingStreamMetadata(rawTitle, options || {});
   }
 
   function syncMetadataOverride() {
@@ -1603,40 +1786,13 @@ var METADATA_IGNORE_BLACKLIST = [
     if (!raw) return;
     if (syncMetadataOverride()) return;
 
-    if (handleBlacklistedMetadata(raw, options)) return;
+    if (handleStableBlacklistedMetadata(raw, options)) return;
 
     var commercialInfo = findCommercialMetadata(raw);
-    if (commercialInfo) {
-      handleIncomingCommercialMetadata(raw, commercialInfo, { forceRender: !!options.forceRender });
-      return;
-    }
-
-    if (app.lastMetadataRaw === raw && app.currentTrack && !app.currentTrack.pendingRefresh && app.displayedMetadataKind === 'music' && !app.awaitingMusicAfterCommercial) {
-      return;
-    }
-
-    if (isUiActive() || options.forceRender) {
-      renderTrackMetadata(raw, { forceRender: true, forceSearch: true, holdMs: 15000 });
-    } else {
-      var fromCommercialContext = app.displayedMetadataKind === 'commercial'
-        || app.pendingMetadataKind === 'commercial'
-        || app.pendingCommercialQueue.length > 0
-        || app.awaitingMusicAfterCommercial
-        || !!(app.currentTrack && app.currentTrack.commercial);
-
-      if (fromCommercialContext) {
-        app.pendingCommercialQueue = [];
-        app.awaitingMusicAfterCommercial = true;
-        clearPendingMetadataState();
-      }
-
-      app.currentTrack = buildTrackCardFromRaw(raw, currentProgramCard().cover);
-      app.currentTrack.pendingRefresh = true;
-      app.lastMetadataRaw = raw;
-      app.pendingMetadataKind = 'music';
-      app.pendingMetadataRaw = raw;
-      app.pendingTrackRevealAt = Date.now() + 15000;
-    }
+    var kind = commercialInfo ? 'commercial' : 'music';
+    startStableMetadataCandidate(kind, raw, commercialInfo, {
+      forceRender: !!options.forceRender
+    });
   }
 
   function connectMetadata() {
@@ -1652,7 +1808,7 @@ var METADATA_IGNORE_BLACKLIST = [
       try {
         var payload = JSON.parse(event.data);
         var raw = payload && payload.streamTitle ? String(payload.streamTitle) : '';
-        handleIncomingStreamMetadata(raw, { forceRender: isUiActive() });
+        handleIncomingStreamMetadata(raw, { forceRender: true });
       } catch (_error) {}
     };
     es.onerror = function () {};
@@ -1662,26 +1818,17 @@ var METADATA_IGNORE_BLACKLIST = [
   function refreshMetadataForeground() {
     if (syncMetadataOverride()) return;
 
-    if (app.displayedMetadataKind === 'commercial' && app.currentTrack && app.currentTrack.commercial) {
-      renderMetadataCard(app.currentTrack);
-    } else if (app.pendingMetadataKind === 'commercial') {
-      if (app.pendingTrackRevealAt && Date.now() < app.pendingTrackRevealAt) {
-        renderPendingHoldCard({ forceRender: true });
-      } else {
-        revealCommercialNow(app.pendingMetadataRaw, app.pendingCommercialInfo, { forceRender: true });
-      }
-    } else if (app.pendingMetadataKind === 'music') {
-      if (app.pendingTrackRevealAt && Date.now() < app.pendingTrackRevealAt) {
-        renderPendingHoldCard({ forceRender: true });
-      } else if (app.pendingMetadataRaw) {
-        revealTrackNow(app.pendingMetadataRaw, { forceRender: true });
-      } else if (app.currentTrack && app.currentTrack.rawTitle) {
-        renderMetadataCard(app.currentTrack);
-      } else {
-        renderProgramMetadataCard({ forceRender: true });
+    if (app.stableMetadataCandidate) {
+      if (!promoteStableCandidateIfReady({ forceRender: true })) {
+        renderStableTransition(app.stableMetadataCandidate, { forceRender: true });
+        scheduleStablePromotion({ forceRender: true });
+        scheduleStableForceReveal({ forceRender: true });
       }
     } else if (app.currentTrack && app.currentTrack.rawTitle) {
       renderMetadataCard(app.currentTrack);
+      if (!app.currentTrack.commercial) {
+        refreshStableMusicDetails(app.currentTrack.rawTitle);
+      }
     } else {
       renderProgramMetadataCard({ forceRender: true });
     }
@@ -1697,10 +1844,21 @@ var METADATA_IGNORE_BLACKLIST = [
       if (!image) return;
       if (!program || !program.image) {
         image.style.display = 'none';
+        host.removeAttribute('data-program-photo-key');
         return;
       }
+
+      var transform = 'translate(' + Number(program.photoX || 0) + 'px, ' + Number(program.photoY || 0) + 'px) scale(' + Math.max(0.1, Number(program.photoZoom || 1)) + ')';
+      var photoKey = String(program.image || '').trim() + '||' + transform;
+
+      if (host.getAttribute('data-program-photo-key') === photoKey && image.getAttribute('data-base-src')) {
+        if (image.style.display === 'none') image.style.display = '';
+        return;
+      }
+
       image.style.display = '';
-      image.style.transform = 'translate(' + Number(program.photoX || 0) + 'px, ' + Number(program.photoY || 0) + 'px) scale(' + Math.max(0.1, Number(program.photoZoom || 1)) + ')';
+      image.style.transform = transform;
+      host.setAttribute('data-program-photo-key', photoKey);
       setFreshImageSource(image, program.image);
     });
   }
