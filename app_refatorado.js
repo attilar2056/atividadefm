@@ -16,7 +16,6 @@ var METADATA_IGNORE_BLACKLIST = [
   'passagem 106 tocada',
   'abertura caio martins',
   'radio 106.1',
-  'boa tarde ooooi',
   'locução de hora',
   'zap zap',
   'passagem 106',
@@ -41,6 +40,7 @@ var METADATA_IGNORE_BLACKLIST = [
   'chamada do insonia',
   'muito mais musicas 106,1',
   'ta  afim de passar um zap',
+  'boa tarde ooooi',
   'se vc nao consegue 106 ouvir',
   'DAQUI A POUCO O SUCESSO ESTA DE VOLTA',
   'Prefixo  Esperança FM  1061 MHz  Boa ViagemCE',
@@ -625,9 +625,11 @@ var METADATA_IGNORE_BLACKLIST = [
   function cleanTitleForSearch(artist, song) {
     var q = ((artist || '') + ' ' + (song || '')).trim();
     if (!q) return '';
+    q = stripMetadataVideoAndSourceText(q);
     q = q.replace(/^[0-9]{1,3}[\s.\-_]+/, '');
     q = q.replace(/\s*-\s*[0-9]{2,3}\s*bpm/gi, '');
     q = q.replace(/\s*[\(\[][^^\)\]]*[\)\]]/g, '');
+    q = stripMetadataVideoAndSourceText(q);
     q = q.replace(/[_]+/g, ' ');
     q = q.replace(/[^\w\sÀ-ÿ]/gi, ' ').replace(/\s+/g, ' ').trim();
     return q;
@@ -755,8 +757,23 @@ var METADATA_IGNORE_BLACKLIST = [
     return /\b(album|novela|trilha|soundtrack|remaster|remastered|edition|edicao|edição)\b/.test(normalized);
   }
 
+  function stripMetadataVideoAndSourceText(value) {
+    var s = String(value || '');
+    if (!s) return '';
+
+    // Remove lixo comum de metadados vindos de YouTube/clipes sem quebrar títulos reais.
+    // Ex.: "OneRepublic I Aint Worried From Top Gun Maverick Official Music Video"
+    // vira "OneRepublic I Aint Worried" antes da busca de capa.
+    s = s.replace(/\s+\bfrom\b[\s\S]*?\b(?:official|music\s+video|official\s+audio|lyric\s+video|lyrics|visualizer|visualiser|soundtrack|ost)\b[\s\S]*$/i, ' ');
+    s = s.replace(/\s+\b(?:featured\s+in|taken\s+from|soundtrack\s+from|trilha\s+sonora\s+de|tema\s+de)\b[\s\S]*$/i, ' ');
+    s = s.replace(/\b(?:official\s+music\s+video|official\s+video|music\s+video|official\s+audio|lyric\s+video|lyrics\s+video|video\s+oficial|clipe\s+oficial|videoclipe\s+oficial|audio\s+oficial|visualizer|visualiser)\b/gi, ' ');
+    s = s.replace(/\b(?:hd|hq|4k)\b/gi, ' ');
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
   function cleanupMetadataChunk(value) {
     var s = String(value || '');
+    s = stripMetadataVideoAndSourceText(s);
     s = s.replace(/\.[a-z0-9]{2,4}$/i, '');
     s = stripQualityMarkers(s);
     s = s.replace(/[_]+/g, ' ');
@@ -766,6 +783,7 @@ var METADATA_IGNORE_BLACKLIST = [
     s = s.replace(/\s*-\s*[0-9]{2,3}\s*bpm/gi, '');
     s = s.replace(/\s*[\(\[][^^\)\]]*[\)\]]/g, '');
     s = stripQualityMarkers(s);
+    s = stripMetadataVideoAndSourceText(s);
     s = s.replace(/\s+/g, ' ').trim();
     s = s.replace(/^[-\s]+|[-\s]+$/g, '').trim();
     return s;
@@ -1053,6 +1071,97 @@ var METADATA_IGNORE_BLACKLIST = [
     };
   }
 
+  function scoreSingleSegmentResult(query, artist, song, cover) {
+    var q = cleanTitleForSearch('', query) || cleanupMetadataChunk(query);
+    var resultArtist = cleanupMetadataChunk(artist);
+    var resultSong = cleanupMetadataChunk(song);
+    var forward = cleanupMetadataChunk((resultArtist || '') + ' ' + (resultSong || ''));
+    var reverse = cleanupMetadataChunk((resultSong || '') + ' ' + (resultArtist || ''));
+    var compactQuery = compactComparable(q);
+    var compactForward = compactComparable(forward);
+    var compactReverse = compactComparable(reverse);
+    var joinScore = Math.max(similarityScore(q, forward), similarityScore(q, reverse));
+
+    if (compactQuery && (compactQuery === compactForward || compactQuery === compactReverse)) {
+      joinScore = Math.max(joinScore, 0.99);
+    }
+
+    if (compactQuery && compactForward && (compactForward.indexOf(compactQuery) !== -1 || compactQuery.indexOf(compactForward) !== -1)) {
+      joinScore = Math.max(joinScore, 0.93);
+    }
+
+    return {
+      total: joinScore,
+      artistScore: similarityScore(q, resultArtist),
+      songScore: similarityScore(q, resultSong),
+      resultArtist: resultArtist,
+      resultSong: resultSong,
+      cover: cover || ''
+    };
+  }
+
+  function bestSingleSegmentMatch(query, deezerResults, itunesItems) {
+    var best = null;
+
+    (deezerResults || []).forEach(function (item) {
+      var score = scoreSingleSegmentResult(
+        query,
+        item && item.artist ? item.artist.name : '',
+        item ? (item.title || '') : '',
+        getCoverFromResult(item)
+      );
+      if (!best || score.total > best.total) best = score;
+    });
+
+    (itunesItems || []).forEach(function (item) {
+      var score = scoreSingleSegmentResult(
+        query,
+        item ? (item.artistName || '') : '',
+        item ? (item.trackName || item.collectionName || '') : '',
+        normalizeCoverUrl(item && (item.artworkUrl100 || item.artworkUrl60 || item.artworkUrl30 || ''))
+      );
+      if (!best || score.total > best.total) best = score;
+    });
+
+    return best;
+  }
+
+  function resolveSingleSegmentTrackMetadata(rawTitle, immediate, cacheKey) {
+    var cleanedSingle = cleanTitleForSearch('', immediate.song || rawTitle) || cleanupMetadataChunk(immediate.song || rawTitle);
+    var fallback = {
+      song: cleanedSingle || cleanupMetadataChunk(immediate.song || rawTitle),
+      artist: immediate.artist || '',
+      cover: ''
+    };
+
+    if (!cleanedSingle) {
+      app.coverCache[cacheKey] = fallback;
+      return Promise.resolve(fallback);
+    }
+
+    return Promise.all([
+      searchDeezerDetailed(cleanedSingle, 8, 5000),
+      searchItunesDetailed(cleanedSingle)
+    ]).then(function (parts) {
+      var best = bestSingleSegmentMatch(cleanedSingle, parts[0] || [], parts[1] || []);
+      if (best && best.total >= 0.58 && best.resultSong) {
+        var resolved = {
+          song: cleanupMetadataChunk(best.resultSong) || fallback.song,
+          artist: cleanupMetadataChunk(best.resultArtist) || fallback.artist,
+          cover: best.cover || ''
+        };
+        app.coverCache[cacheKey] = resolved;
+        return resolved;
+      }
+
+      app.coverCache[cacheKey] = fallback;
+      return fallback;
+    }).catch(function () {
+      app.coverCache[cacheKey] = fallback;
+      return fallback;
+    });
+  }
+
   function resolveArtistFromSingleSegment(segment) {
     var cleaned = cleanupMetadataChunk(segment);
     if (!cleaned) {
@@ -1096,9 +1205,7 @@ var METADATA_IGNORE_BLACKLIST = [
     var first = immediate.first;
     var second = immediate.second;
     if (!second) {
-      var simple = { song: immediate.song, artist: immediate.artist || '', cover: '' };
-      app.coverCache[cacheKey] = simple;
-      return Promise.resolve(simple);
+      return resolveSingleSegmentTrackMetadata(rawTitle, immediate, cacheKey);
     }
 
     var direct = { artist: cleanupMetadataChunk(first), song: cleanupMetadataChunk(second) };
