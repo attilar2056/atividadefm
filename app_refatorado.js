@@ -16,6 +16,7 @@ var METADATA_IGNORE_BLACKLIST = [
   'passagem 106 tocada',
   'abertura caio martins',
   'radio 106.1',
+  'boa tarde ooooi',
   'locução de hora',
   'zap zap',
   'passagem 106',
