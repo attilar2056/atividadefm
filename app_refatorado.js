@@ -31,12 +31,17 @@ var METADATA_IGNORE_BLACKLIST = [
   '106 sem chiados',
   'charm ea qui',
   'ta gostando 106',
-  'Vinheta - trimega',
+  'vinheta - trimega',
   'chamd class da disco',
-  'Vinheta - trimega-3-na-sequencia',
-  'Locução de hora',
-  'aud-20241102-wa0027.mp3prefixo oficial oc 49m'
+  'vinheta - trimega-3-na-sequencia',
+  'locução de hora',
+  'aud-20241102-wa0027.mp3prefixo oficial oc 49m',
+  'chamada do insonia',
+  'muito mais musicas 106,1',
+  'ola vc ta 106.1'
 ];
+
+
   // Lista local que decide quais metadados são comerciais.
   // O id precisa bater com o id cadastrado em programas/comercial.json para usar logo/título personalizado.
   // Se o id não existir no JSON, o player usa o nome original do metadado e a logo da rádio.
@@ -49,6 +54,8 @@ var METADATA_IGNORE_BLACKLIST = [
     { id: 'real_pax_2', terms: ['real pax 2'] },
     { id: 'pgm 02', terms: ['pgm 02'] },
     { id: 'stream', terms: ['stream'] },
+    { id: 'fala_do_anucie_nv', terms: ['fala do anucie nv'] },
+    { id: 'chamada_do_insonia', terms: ['chamada do insonia'] },
     { id: 'AUD-20260108-WA0300.', terms: ['AUD-20260108-WA0300.'] },
     { id: 'OFF_toca_do_bugre', terms: ['OFF toca do bugre'] },
     { id: 'postes', terms: ['postes'] },

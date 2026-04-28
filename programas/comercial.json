@@ -31,6 +31,11 @@
       "image": "assets/uploads/efraim-cursos.png"
     },
     {
+      "id": "fala_do_anucie_nv",
+      "title": "Locutor Alex Alves",
+      "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg"
+    },
+    {
       "id": "gezin_regularizacao",
       "title": "Comercial Gazin Regularização",
       "image": "assets/uploads/Capa-725x1024.jpg"
@@ -49,6 +54,11 @@
       "id": "oracao_bp",
       "title": "Oração com Bispo Edinaldo",
       "image": "assets/uploads/1777324170544_Podcast_1.jpg"
+    },
+    {
+      "id": "pgm_02",
+      "title": "Bispo Edinaldo Silva",
+      "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg"
     },
     {
       "id": "real_pax_1",
@@ -76,9 +86,9 @@
       "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg"
     },
     {
-      "id": "pgm_02",
-      "title": "Bispo Edinaldo Silva",
-      "image": "assets/uploads/1775609513551_1775609407204_1775608829640_WhatsApp_Image_2026-04-07_at_19.20.01.jpeg"
+      "id": "chamada_do_insonia",
+      "title": "Chamada do Insonia",
+      "image": "assets/uploads/insonia.jpg"
     }
   ]
 }
