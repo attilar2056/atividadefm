@@ -47,6 +47,7 @@ var METADATA_IGNORE_BLACKLIST = [
     { id: 'real_px_voz', terms: ['real px voz'] },
     { id: 'real_pax_1', terms: ['real pax 1'] },
     { id: 'real_pax_2', terms: ['real pax 2'] },
+    { id: 'pgm 02', terms: ['pgm 02'] },
     { id: 'stream', terms: ['stream'] },
     { id: 'AUD-20260108-WA0300.', terms: ['AUD-20260108-WA0300.'] },
     { id: 'OFF_toca_do_bugre', terms: ['OFF toca do bugre'] },
