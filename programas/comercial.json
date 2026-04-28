@@ -1,6 +1,16 @@
 {
   "comerciais": [
     {
+      "id": "ab_top_hits",
+      "title": "Abertura Top hits 2ª edição",
+      "image": "assets/uploads/1777400891960_top2.jpg"
+    },
+    {
+      "id": "abertura_7_terca_feira",
+      "title": "Abertura Top hits 2ª edição",
+      "image": "assets/uploads/1777400891960_top2.jpg"
+    },
+    {
       "id": "alex_alves",
       "title": "Locutor Alex Alves",
       "image": "assets/uploads/1775232022808_122ff154-13ea-47dd-843c-3b2c6c1ff096.jpg"
@@ -129,6 +139,11 @@
       "id": "stream",
       "title": "A Voz do Brasil",
       "image": "assets/uploads/1775813163928_1775234080144_A_Voz_do_Brasil_103_1_FM_1.jpg"
+    },
+    {
+      "id": "sume_salgados",
+      "title": "Comercial Marinaldo Salgados",
+      "image": "assets/uploads/1777403959727_marinaldo.jpg"
     }
   ]
 }

@@ -48,6 +48,8 @@ var METADATA_IGNORE_BLACKLIST = [
   'Prefixo  Esperança FM  1061 MHz  Boa ViagemCE',
   'pass 01',
   'final  novo  seg a qinta',
+  '',
+  ' ',
   'ola vc ta 106.1'
 ];
 
@@ -67,6 +69,7 @@ var METADATA_IGNORE_BLACKLIST = [
     { id: 'pgm 02', terms: ['pgm 02'] },
     { id: 'stream', terms: ['stream'] },
     { id: 'alex_alves', terms: ['fala do anucie nv', 'fl alex 03'] },
+    { id: 'ab_top_hits', terms: ['ab top hits', 'abertura 7 terca feira', 'abertura 7 terça feira', 'z alo, on, cosme pintor e lanterneiro wagner'] },
     { id: 'chamada_do_insonia', terms: ['chamada do insonia'] },
     { id: 'chamd_class_da_disco', terms: ['chamd class da disco'] },
     { id: 'daniel_apvs', terms: ['DANIEL APVS', 'daniel apvs'] },
