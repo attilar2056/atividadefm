@@ -38,6 +38,8 @@ var METADATA_IGNORE_BLACKLIST = [
   'aud-20241102-wa0027.mp3prefixo oficial oc 49m',
   'chamada do insonia',
   'muito mais musicas 106,1',
+  'ta  afim de passar um zap',
+  'Prefixo  Esperança FM  1061 MHz  Boa ViagemCE',
   'ola vc ta 106.1'
 ];
 
